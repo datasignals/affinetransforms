@@ -12,7 +12,7 @@ class Decrypt {
   private[this] val entries = new ConcurrentHashMap[Key, Entry]()
   private val dim = 1
 
-  private[this] val recordFactory: (Key, ArrayIndex[Byte]) => Record[Key, ArrayIndex[Byte]] = {
+  private[this] val recordFactory: (Key, Array[ArrayIndex[Byte]]) => Record[Key, Array[ArrayIndex[Byte]]] = {
     (k, v) => new GenericRecord(k, v)
   }
 
