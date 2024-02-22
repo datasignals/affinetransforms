@@ -138,29 +138,38 @@ class Decrypt(private[this] val cipher: () => BlockCipher,
     Some(result.toArray)
   }
 
-  def unshift(in: Array[Byte]) = {
-    val out: ArrayBuffer[Byte] = new ArrayBuffer()
+  def unshift(in: Array[Byte]): Option[Array[Byte]] = {
+    val out: Array[Byte] = new Array(72)
 
     var shiftCnt = 0
-
-
     val length = 24
+    var outOffset = 0
     var inOffset = 0
     var bytes = nonceSize
-
+    var inOff: Int = inOffset + nonceSize
+    var outOff = outOffset
+    val counterOut = new Array[Byte](cipherBlockSize)
     val l = Math.min(length, in.length - inOffset)
-    if(l <= nonceSize) return l
 
-    for(i <- 0 until cipherSubblocks) {
-      if(bytes >= l) return bytes
-      val a = Bits.getLongUnsafe(in, inOff)
-      val c = Bits.getLongUnsafe(counterOut, i << LOG_LONG_BYTES)
-      Bits.putBytes(out, outOff, (a - shift(shiftCnt)) ^ c)
-      shiftCnt += 1
-      outOff += LONG_BYTES
-      inOff += LONG_BYTES
-      bytes += LONG_BYTES
+    var processedBytes = 0
+
+    while (processedBytes != 16) {
+      if (l <= nonceSize) return None
+
+      for (i <- 0 until cipherSubblocks) {
+        if (bytes >= l) return Some(out)
+        val a = Bits.getLongUnsafe(in, inOff)
+        val c = Bits.getLongUnsafe(counterOut, i << LOG_LONG_BYTES)
+        Bits.putBytes(out, outOff, (a - shift(shiftCnt)) ^ c)
+        shiftCnt += 1
+        outOff += LONG_BYTES
+        inOff += LONG_BYTES
+        bytes += LONG_BYTES
+      }
+      processedBytes += bytes
     }
+
+    Some(out)
   }
 
 
