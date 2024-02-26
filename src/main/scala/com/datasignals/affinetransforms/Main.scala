@@ -130,7 +130,8 @@ object Main {
 
   //TODO get this matrix somehow differently, I should not need
   // defradingParameters
-  val nativeMatrixMixer = new NativeMatrixMixer(dim, defradingParameters.matrix)
+//  val nativeMatrixMixer = new NativeMatrixMixer(dim, defradingParameters.matrix)
+val dynamicMatrixMixer = DynamicMatrixMixer(dim, defradingParameters.matrix)
 
   def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
     try {
@@ -186,7 +187,7 @@ object Main {
   def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
     val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(112), 0, 112)
 
-    nativeMatrixMixer.apply(out, in)
+    dynamicMatrixMixer.apply(out, in)
 
     out.array
   }

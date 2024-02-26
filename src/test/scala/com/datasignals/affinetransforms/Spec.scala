@@ -15,6 +15,7 @@ import scala.util.Try
 
 object Spec extends TestSuite with Data {
 
+
   private[this] val dim = 2
   private[this] val keyStorePath = Paths.get("/Users/og_pixel/.m2g-data-viewer/keystore")
   private[this] val keyStoreManager = new KeyStoreManager(

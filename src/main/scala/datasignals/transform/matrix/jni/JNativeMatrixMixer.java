@@ -1,12 +1,12 @@
-package com.datasignals.affinetransforms;
+package datasignals.transform.matrix.jni;
 
-class JNativeMatrixMixer {
+public class JNativeMatrixMixer {
 
-    native static void mix(byte[] out, int outPosition,
+    native public static void mix(byte[] out, int outPosition,
                              long[] matrix, int dimension,
                              byte[][] in, int[] inPositions, int inLength);
 
-    native static void concurrentMix(byte[] out, int outPosition,
+    native public static void concurrentMix(byte[] out, int outPosition,
                              long[] matrix, int dimension,
                              byte[][] in, int[] inPositions, int inLength,
                              int numberOfThreads);
