@@ -1,6 +1,5 @@
 package com.datasignals.affinetransforms
 
-import com.datasignals.affinetransforms.Main.{cipherFactory, keyParam, shift}
 import com.datasignals.affinetransforms.entry.Bits
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
 import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager, KeyStorePathInfo}
@@ -83,11 +82,18 @@ object Spec extends TestSuite with Data {
 
       decryptResult2 match {
         case Some(value) =>
-          println("Decrypted again: " + value.mkString("", ", ", ""))
-          println("Expected: " + resultArray.mkString("", ", ", ""))
+//          println("Decrypted again: " + value.mkString("", ", ", ""))
+//          println("Expected: " + resultArray.mkString("", ", ", ""))
           assert(value.sameElements(resultArray))
         case None => assert(false)
       }
+    }
+
+
+    test("Just mixing test") - {
+      val mixResult = Main.assemble(arrayIndex)
+
+      println("Mix Result: " + mixResult.mkString("", ", ", ""))
     }
 
 

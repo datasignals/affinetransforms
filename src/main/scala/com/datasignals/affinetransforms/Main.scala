@@ -1,6 +1,6 @@
 package com.datasignals.affinetransforms
 
-import com.datasignals.affinetransforms.entry.Bits
+import com.datasignals.affinetransforms.entry.{ArrayIndex, Bits}
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
 import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager, KeyStorePathInfo}
 import org.bouncycastle.crypto.BlockCipher
@@ -36,6 +36,27 @@ object Main {
     106, -59, 0, 0, 0, 0, 24, 0, 84, 0, 104, 0, 117, 0, 32, 0, 48, 0, 48, 0, 58,
     0, 52, 0, 51, 0, 58, 0, 51, 0, 48, 66, -120, 0, 0, 66, -119, 0, 0, 127, -64,
     0, 0, 127, -64, 0, 0, 37, 33, 37, 9
+  )
+
+  //Part used for Mixer
+  private val inputValue1: Array[Byte] = Array(
+    74, -51, 32, 22, 89, -42, 52, -112, 42, 70, -2, 91, 67, -93, -73, 99, 82,
+    81, -100, -116, -60, 123, -36, -24, -95, -68, 60, 0, -96, -28, -59, 22, 101,
+    111, 63, 53, -33, -117, 81, -69, -6, -57, 46, 123, 55, 77, 118, 73, -71,
+    -124, 47, 88, -79, 90, -2, 83
+  )
+
+  private val inputValue2: Array[Byte] = Array(
+    -60, -46, 31, -75, 42, 15, -79, -32, 111, 19, -82, 28, 15, 24, -122, -100, //16,32,48,57
+    103, 122, -125, 120, 60, -2, 57, -53, -65, 87, 125, -62, 34, -56, 66, 108,
+    -38, -127, -32, -99, 67, 60, 93, -100, -75, 126, -6, -58, -69, -74, -33,
+    -26, 100, 104, 4, 75, -74, -97, -36, -25
+  )
+
+  //ArrayIndex used for mixing, it represents a message split two ways
+  private val arrayIndex: Array[ArrayIndex[Byte]] = Array(
+    new ArrayIndex[Byte](inputValue1, 0, inputValue1.length),
+    new ArrayIndex[Byte](inputValue2, 0, inputValue2.length),
   )
 
 
@@ -80,6 +101,11 @@ object Main {
 
   val filePath =
     "defraded.csv" //"ne-part-defraded.csv" //"df2.csv" //"defraded.csv"
+
+
+  val defradingParameters =
+    DefradingParameters.apply(dim, keyStoreManager, "m2g_frading", "m2g_frading", "m2g_frading")
+
   /** *****************************************************************************************************************
     */
 
@@ -102,6 +128,9 @@ object Main {
     keyParam, new Random())(shift) //(shiftArray)
 
 
+  //TODO get this matrix somehow differently, I should not need
+  // defradingParameters
+  val nativeMatrixMixer = new NativeMatrixMixer(dim, defradingParameters.matrix)
 
   def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
     try {
@@ -153,6 +182,17 @@ object Main {
   }
 
 
+  //Formerly Mixer
+  def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
+    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(112), 0, 112)
+
+    nativeMatrixMixer.apply(out, in)
+
+    out.array
+  }
+
+  //Formerly Splitter
+  def disassemble() = {}
 
 
 
@@ -160,256 +200,250 @@ object Main {
 
   //Based on Decrypt and Unshift function with a loop to process the entire thing
   //TODO  I did this first but I think the second decrypt has better odds of working
-  def decrypt(in: Array[Byte]): Option[Array[Byte]] = {
-    val result: ArrayBuffer[Byte] = new ArrayBuffer()
-
-    val out = new Array[Byte](72) // Adjust the size as needed
-    val length = 24
-    var outOffset = 0
-    var inOffset = 0
-    var processedBytes = 0
-
-    while (processedBytes != 16) {
-      val l = Math.min(length, in.length - inOffset)
-      if (l <= nonceSize) return None
-
-      val c = cipher()
-      c.init(true, params)
-      val counter = new Array[Byte](cipherBlockSize)
-      System.arraycopy(in, inOffset, counter, 0, nonceSize)
-      val counterOut = new Array[Byte](cipherBlockSize)
-
-      val ll = l - nonceSize
-      var subblocks =
-        (ll / cipherBlockSize) + (if (ll % cipherBlockSize == 0) 0 else 1)
-
-      var inOff: Int = inOffset + nonceSize
-      var outOff = outOffset
-      var bytes = nonceSize
-      var shiftCnt = 0
-      subblocks = 1 //HARD CODED!!!!!!!!!!!!!!!!!
-      for (k <- 0 until subblocks) {
-        Bits.putBytes(counter, nonceSize, k)
-        c.reset()
-        c.processBlock(counter, 0, counterOut, 0)
-
-        for (i <- 0 until cipherSubblocks) {
-          if (bytes >= l) return None
-          val a = Bits.getLongUnsafe(in, inOff)
-          val c = Bits.getLongUnsafe(counterOut, i << LOG_LONG_BYTES)
-          Bits.putBytes(out, outOff, a)
-          shiftCnt += 1
-          outOff += LONG_BYTES
-          inOff += LONG_BYTES
-          bytes += LONG_BYTES
-        }
-        processedBytes += bytes
-      }
-
-      result.appendedAll(out)
-      outOffset += 16
-      inOffset += 24
-    }
-
-    Some(result.toArray)
-  }
-
-  //Based on Decrypt class alone, with a loop to process the entire thing
-  def decrypt2(in: Array[Byte]): Array[Byte] = {
-
-    val result: ArrayBuffer[Byte] = new ArrayBuffer()
-
-    val out = new Array[Byte](72) // Adjust the size as needed
-    val length = 24
-    var outOffset = 0
-    var inOffset = 0
-    var processedBytes = 0
-
-    while (processedBytes != 16) {
-
-      val l = Math.min(length, in.length - inOffset)
-      if (l <= nonceSize) return out//l
-
-      val c = cipher()
-      c.init(true, params)
-      val cipherBlockSize = c.getBlockSize
-      val counter = new Array[Byte](cipherBlockSize)
-      System.arraycopy(in, inOffset, counter, 0, nonceSize)
-      val counterOut = new Array[Byte](cipherBlockSize)
-
-      val ll = l - nonceSize
-      val subblocks = ll / cipherBlockSize
-      val lastSubblockSize = ll % cipherBlockSize
-
-      var inOff: Int = inOffset + nonceSize
-      var outOff = outOffset
-      var bytes = nonceSize
-      for (k <- 0 until subblocks) {
-        Bits.putBytes(counter, nonceSize, k)
-        c.reset()
-        c.processBlock(counter, 0, counterOut, 0)
-
-        for (i <- 0 until cipherBlockSize) {
-          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
-          outOff += 1
-          inOff += 1
-        }
-        bytes += cipherBlockSize
-      }
-
-      if (lastSubblockSize > 0) {
-        Bits.putBytes(counter, nonceSize, subblocks)
-        c.reset()
-        c.processBlock(counter, 0, counterOut, 0)
-
-        for (i <- 0 until lastSubblockSize) {
-          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
-          outOff += 1
-          inOff += 1
-        }
-        bytes += lastSubblockSize
-      }
-      processedBytes += bytes
-    }
-
-    out
-  }
-
-  //Based on Unshift class in M2G
-  def unshift(in: Array[Byte]): Array[Byte] = {
-    val out = new Array[Byte](72) // Adjust the size as needed
-    val length = 24
-    var outOffset = 0
-    var inOffset = 0
-    var processedBytes = 0
-
-    while (processedBytes != 16) {
-      val l = Math.min(length, in.length - inOffset)
-      var outOff = outOffset
-      var bytes = nonceSize
-      for (k <- 0 until outSubblocks) {
-        if (bytes >= l) return out
-        Bits.putBytes(out, outOff, Bits.getLongUnsafe(in, inOffset + bytes) - shift(k))
-        outOff += LONG_BYTES
-        bytes += LONG_BYTES
-      }
-
-      outOffset += 16
-      inOffset += 24
-      processedBytes += bytes
-    }
-    out
-  }
-
-  //Based on Shift class
-  def shift(in: Array[Byte]): Array[Byte] = {
-    /*********From Class*/
-    val inSubblocks: Int = shift.length
-    /*********/
-
-    /********From Snippet*/
-    val out = new Array[Byte](72) // Adjust the size as needed
-    val length = 24
-    var outOffset = 0
-    var inOffset = 0
-    var processedBytes = 0
-    /*********/
-
-    while (processedBytes != 16) {
-      val l = Math.min(length, in.length - inOffset)
-      var outOff = outOffset
-      var bytes = 0
-      for (k <- 0 until inSubblocks) {
-        if (bytes >= l) return out
-        Bits.putBytes(out, outOff, Bits.getLongUnsafe(in, inOffset + bytes) + shift(k))
-        outOff += LONG_BYTES
-        bytes += LONG_BYTES
-      }
-      /********From Snippet to iterate correctly(?)*/
-      outOffset += 16
-      inOffset += 24
-      processedBytes += bytes
-      /*********/
-    }
-    out
-  }
-
-  def encrypt(in: Array[Byte]): Option[Array[Byte]] = {
-    /********From Snippet*/
-    val out = new Array[Byte](72) // Adjust the size as needed
-    val length = 24
-    var outOffset = 0
-    var inOffset = 0
-    var processedBytes = 0
-    val random = new Random()
-    /*********/
-
-
-
-
-    while (processedBytes != 16) {
-
-
-      val l = Math.min(length, in.length - inOffset)
-      if (l <= 0) return None
-
-      val iv = new Array[Byte](nonceSize)
-      random.nextBytes(iv)
-      System.arraycopy(iv, 0, out, outOffset, nonceSize)
-
-      val c = cipher()
-      c.init(true, params)
-      val cipherBlockSize = c.getBlockSize
-      val counter = new Array[Byte](cipherBlockSize)
-      System.arraycopy(iv, 0, counter, 0, nonceSize)
-      val counterOut = new Array[Byte](cipherBlockSize)
-
-      val subblocks = l / cipherBlockSize
-      val lastSubblockSize = l % cipherBlockSize
-
-      var outOff = outOffset + nonceSize
-      var inOff = inOffset
-      var bytes = 0
-      for (k <- 0 until subblocks) {
-        Bits.putBytes(counter, nonceSize, k)
-        c.reset()
-        c.processBlock(counter, 0, counterOut, 0)
-
-        for (i <- 0 until cipherBlockSize) {
-          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
-          outOff += 1
-          inOff += 1
-        }
-        bytes += cipherBlockSize
-      }
-
-      if (lastSubblockSize > 0) {
-        Bits.putBytes(counter, nonceSize, subblocks)
-        c.reset()
-        c.processBlock(counter, 0, counterOut, 0)
-
-        for (i <- 0 until lastSubblockSize) {
-          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
-          outOff += 1
-          inOff += 1
-        }
-        bytes += lastSubblockSize
-      }
-
-      /********From Snippet to iterate correctly(?)*/
-      outOffset += 16
-      inOffset += 24
-      processedBytes += bytes
-      /*********/
-    }
-
-    Some(out)
-  }
-
-  //Formerly Mixer
-  def assemble() = {}
-
-  //Formerly Splitter
-  def disassemble() = {}
+//  def decrypt(in: Array[Byte]): Option[Array[Byte]] = {
+//    val result: ArrayBuffer[Byte] = new ArrayBuffer()
+//
+//    val out = new Array[Byte](72) // Adjust the size as needed
+//    val length = 24
+//    var outOffset = 0
+//    var inOffset = 0
+//    var processedBytes = 0
+//
+//    while (processedBytes != 16) {
+//      val l = Math.min(length, in.length - inOffset)
+//      if (l <= nonceSize) return None
+//
+//      val c = cipher()
+//      c.init(true, params)
+//      val counter = new Array[Byte](cipherBlockSize)
+//      System.arraycopy(in, inOffset, counter, 0, nonceSize)
+//      val counterOut = new Array[Byte](cipherBlockSize)
+//
+//      val ll = l - nonceSize
+//      var subblocks =
+//        (ll / cipherBlockSize) + (if (ll % cipherBlockSize == 0) 0 else 1)
+//
+//      var inOff: Int = inOffset + nonceSize
+//      var outOff = outOffset
+//      var bytes = nonceSize
+//      var shiftCnt = 0
+//      subblocks = 1 //HARD CODED!!!!!!!!!!!!!!!!!
+//      for (k <- 0 until subblocks) {
+//        Bits.putBytes(counter, nonceSize, k)
+//        c.reset()
+//        c.processBlock(counter, 0, counterOut, 0)
+//
+//        for (i <- 0 until cipherSubblocks) {
+//          if (bytes >= l) return None
+//          val a = Bits.getLongUnsafe(in, inOff)
+//          val c = Bits.getLongUnsafe(counterOut, i << LOG_LONG_BYTES)
+//          Bits.putBytes(out, outOff, a)
+//          shiftCnt += 1
+//          outOff += LONG_BYTES
+//          inOff += LONG_BYTES
+//          bytes += LONG_BYTES
+//        }
+//        processedBytes += bytes
+//      }
+//
+//      result.appendedAll(out)
+//      outOffset += 16
+//      inOffset += 24
+//    }
+//
+//    Some(result.toArray)
+//  }
+//
+//  //Based on Decrypt class alone, with a loop to process the entire thing
+//  def decrypt2(in: Array[Byte]): Array[Byte] = {
+//
+//    val result: ArrayBuffer[Byte] = new ArrayBuffer()
+//
+//    val out = new Array[Byte](72) // Adjust the size as needed
+//    val length = 24
+//    var outOffset = 0
+//    var inOffset = 0
+//    var processedBytes = 0
+//
+//    while (processedBytes != 16) {
+//
+//      val l = Math.min(length, in.length - inOffset)
+//      if (l <= nonceSize) return out//l
+//
+//      val c = cipher()
+//      c.init(true, params)
+//      val cipherBlockSize = c.getBlockSize
+//      val counter = new Array[Byte](cipherBlockSize)
+//      System.arraycopy(in, inOffset, counter, 0, nonceSize)
+//      val counterOut = new Array[Byte](cipherBlockSize)
+//
+//      val ll = l - nonceSize
+//      val subblocks = ll / cipherBlockSize
+//      val lastSubblockSize = ll % cipherBlockSize
+//
+//      var inOff: Int = inOffset + nonceSize
+//      var outOff = outOffset
+//      var bytes = nonceSize
+//      for (k <- 0 until subblocks) {
+//        Bits.putBytes(counter, nonceSize, k)
+//        c.reset()
+//        c.processBlock(counter, 0, counterOut, 0)
+//
+//        for (i <- 0 until cipherBlockSize) {
+//          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
+//          outOff += 1
+//          inOff += 1
+//        }
+//        bytes += cipherBlockSize
+//      }
+//
+//      if (lastSubblockSize > 0) {
+//        Bits.putBytes(counter, nonceSize, subblocks)
+//        c.reset()
+//        c.processBlock(counter, 0, counterOut, 0)
+//
+//        for (i <- 0 until lastSubblockSize) {
+//          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
+//          outOff += 1
+//          inOff += 1
+//        }
+//        bytes += lastSubblockSize
+//      }
+//      processedBytes += bytes
+//    }
+//
+//    out
+//  }
+//
+//  //Based on Unshift class in M2G
+//  def unshift(in: Array[Byte]): Array[Byte] = {
+//    val out = new Array[Byte](72) // Adjust the size as needed
+//    val length = 24
+//    var outOffset = 0
+//    var inOffset = 0
+//    var processedBytes = 0
+//
+//    while (processedBytes != 16) {
+//      val l = Math.min(length, in.length - inOffset)
+//      var outOff = outOffset
+//      var bytes = nonceSize
+//      for (k <- 0 until outSubblocks) {
+//        if (bytes >= l) return out
+//        Bits.putBytes(out, outOff, Bits.getLongUnsafe(in, inOffset + bytes) - shift(k))
+//        outOff += LONG_BYTES
+//        bytes += LONG_BYTES
+//      }
+//
+//      outOffset += 16
+//      inOffset += 24
+//      processedBytes += bytes
+//    }
+//    out
+//  }
+//
+//  //Based on Shift class
+//  def shift(in: Array[Byte]): Array[Byte] = {
+//    /*********From Class*/
+//    val inSubblocks: Int = shift.length
+//    /*********/
+//
+//    /********From Snippet*/
+//    val out = new Array[Byte](72) // Adjust the size as needed
+//    val length = 24
+//    var outOffset = 0
+//    var inOffset = 0
+//    var processedBytes = 0
+//    /*********/
+//
+//    while (processedBytes != 16) {
+//      val l = Math.min(length, in.length - inOffset)
+//      var outOff = outOffset
+//      var bytes = 0
+//      for (k <- 0 until inSubblocks) {
+//        if (bytes >= l) return out
+//        Bits.putBytes(out, outOff, Bits.getLongUnsafe(in, inOffset + bytes) + shift(k))
+//        outOff += LONG_BYTES
+//        bytes += LONG_BYTES
+//      }
+//      /********From Snippet to iterate correctly(?)*/
+//      outOffset += 16
+//      inOffset += 24
+//      processedBytes += bytes
+//      /*********/
+//    }
+//    out
+//  }
+//
+//  def encrypt(in: Array[Byte]): Option[Array[Byte]] = {
+//    /********From Snippet*/
+//    val out = new Array[Byte](72) // Adjust the size as needed
+//    val length = 24
+//    var outOffset = 0
+//    var inOffset = 0
+//    var processedBytes = 0
+//    val random = new Random()
+//    /*********/
+//
+//
+//
+//
+//    while (processedBytes != 16) {
+//
+//
+//      val l = Math.min(length, in.length - inOffset)
+//      if (l <= 0) return None
+//
+//      val iv = new Array[Byte](nonceSize)
+//      random.nextBytes(iv)
+//      System.arraycopy(iv, 0, out, outOffset, nonceSize)
+//
+//      val c = cipher()
+//      c.init(true, params)
+//      val cipherBlockSize = c.getBlockSize
+//      val counter = new Array[Byte](cipherBlockSize)
+//      System.arraycopy(iv, 0, counter, 0, nonceSize)
+//      val counterOut = new Array[Byte](cipherBlockSize)
+//
+//      val subblocks = l / cipherBlockSize
+//      val lastSubblockSize = l % cipherBlockSize
+//
+//      var outOff = outOffset + nonceSize
+//      var inOff = inOffset
+//      var bytes = 0
+//      for (k <- 0 until subblocks) {
+//        Bits.putBytes(counter, nonceSize, k)
+//        c.reset()
+//        c.processBlock(counter, 0, counterOut, 0)
+//
+//        for (i <- 0 until cipherBlockSize) {
+//          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
+//          outOff += 1
+//          inOff += 1
+//        }
+//        bytes += cipherBlockSize
+//      }
+//
+//      if (lastSubblockSize > 0) {
+//        Bits.putBytes(counter, nonceSize, subblocks)
+//        c.reset()
+//        c.processBlock(counter, 0, counterOut, 0)
+//
+//        for (i <- 0 until lastSubblockSize) {
+//          out(outOff) = (in(inOff) ^ counterOut(i)).asInstanceOf[Byte]
+//          outOff += 1
+//          inOff += 1
+//        }
+//        bytes += lastSubblockSize
+//      }
+//
+//      /********From Snippet to iterate correctly(?)*/
+//      outOffset += 16
+//      inOffset += 24
+//      processedBytes += bytes
+//      /*********/
+//    }
+//
+//    Some(out)
+//  }
 
 }

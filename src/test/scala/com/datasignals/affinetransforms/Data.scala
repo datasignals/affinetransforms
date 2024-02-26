@@ -1,5 +1,8 @@
 package com.datasignals.affinetransforms
 
+import com.datasignals.affinetransforms.Main.{inputValue1, inputValue2}
+import com.datasignals.affinetransforms.entry.ArrayIndex
+
 trait Data {
 
   val inputArray: Array[Byte] = Array(
@@ -17,6 +20,27 @@ trait Data {
     106, -59, 0, 0, 0, 0, 24, 0, 84, 0, 104, 0, 117, 0, 32, 0, 48, 0, 48, 0, 58,
     0, 52, 0, 51, 0, 58, 0, 51, 0, 48, 66, -120, 0, 0, 66, -119, 0, 0, 127, -64,
     0, 0, 127, -64, 0, 0, 37, 33, 37, 9
+  )
+
+  //Part used for Mixer
+  private val inputValue1: Array[Byte] = Array(
+    74, -51, 32, 22, 89, -42, 52, -112, 42, 70, -2, 91, 67, -93, -73, 99, 82,
+    81, -100, -116, -60, 123, -36, -24, -95, -68, 60, 0, -96, -28, -59, 22, 101,
+    111, 63, 53, -33, -117, 81, -69, -6, -57, 46, 123, 55, 77, 118, 73, -71,
+    -124, 47, 88, -79, 90, -2, 83
+  )
+
+  private val inputValue2: Array[Byte] = Array(
+    -60, -46, 31, -75, 42, 15, -79, -32, 111, 19, -82, 28, 15, 24, -122, -100,
+    103, 122, -125, 120, 60, -2, 57, -53, -65, 87, 125, -62, 34, -56, 66, 108,
+    -38, -127, -32, -99, 67, 60, 93, -100, -75, 126, -6, -58, -69, -74, -33,
+    -26, 100, 104, 4, 75, -74, -97, -36, -25
+  )
+
+  //ArrayIndex used for mixing, it represents a message split two ways
+  val arrayIndex: Array[ArrayIndex[Byte]] = Array(
+    new ArrayIndex[Byte](inputValue1, 0, inputValue1.length),
+    new ArrayIndex[Byte](inputValue2, 0, inputValue2.length),
   )
 
 }

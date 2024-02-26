@@ -13,4 +13,6 @@ libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.2" % "test"
 
 testFrameworks += new TestFramework("utest.runner.Framework")
 
+javaOptions += "-Djava.library.path=/Users/og_pixel/workspace/transforms/blumamba-splitter-native/src/native/build"
+
 mainClass := Some("com.datasignals.affinetransforms.Main")
