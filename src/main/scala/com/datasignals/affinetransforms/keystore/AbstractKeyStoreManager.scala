@@ -1,5 +1,8 @@
 package com.datasignals.affinetransforms.keystore
 
+import org.bouncycastle.crypto.Digest
+import org.bouncycastle.crypto.digests.SHA256Digest
+
 import java.nio.file.{Files, Path}
 import java.security.cert.Certificate
 import java.security.{KeyStore, PublicKey}

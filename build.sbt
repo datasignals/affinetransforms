@@ -9,5 +9,8 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
 libraryDependencies += "org.bouncycastle" % "bcprov-jdk15on" % "1.70"
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+libraryDependencies += "com.lihaoyi" %% "utest" % "0.8.2" % "test"
+
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 mainClass := Some("com.datasignals.affinetransforms.Main")

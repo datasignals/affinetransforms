@@ -11,15 +11,40 @@ import java.lang.Long.{BYTES => LONG_BYTES}
 import java.nio.file.Paths
 import java.util.Random
 import scala.collection.mutable.ArrayBuffer
+import scala.util.{Failure, Success, Try}
+
+
+
+//Input Array    42,73,-98,-65,32,-115,44,124,107,109,-75,-8,55,116,120,-75,-10,-80,67,1,109,8,74,102,-58,-12,51,36,77,62,38,64,-33,102,50,16,-35,7,21,126,95,-123,-29,-72,-54,-95,72,106,-6,17,-9,-22,-41,17,-14,-104,-89,124,-84,87,40,50,107,-72,112,-29,-56,-31,75,27,5,66,-26,40,68,29,36,-58,27,58,2,-83,-99,105,92,-85,-26,18,-99,-69,20,-64,76,110,101,-46,-102,23,-95,65,-116,-93,12,82,101,-109,-128,70,63,-39,67,-28
+//Result Array   0,0,0,12,0,0,0,23,0,3,34,-24,0,0,0,0,99,15,-10,2,22,106,-59,0,0,0,0,24,0,84,0,104,0,117,0,32,0,48,0,48,0,58,0,52,0,51,0,58,0,51,0,48,66,-120,0,0,66,-119,0,0,127,-64,0,0,127,-64,0,0,37,33,37,9
+
 
 object Main {
+
+  private val inputArray: Array[Byte] = Array(
+    42, 73, -98, -65, 32, -115, 44, 124, 107, 109, -75, -8, 55, 116, 120, -75,
+    -10, -80, 67, 1, 109, 8, 74, 102, -58, -12, 51, 36, 77, 62, 38, 64, -33,
+    102, 50, 16, -35, 7, 21, 126, 95, -123, -29, -72, -54, -95, 72, 106, -6, 17,
+    -9, -22, -41, 17, -14, -104, -89, 124, -84, 87, 40, 50, 107, -72, 112, -29,
+    -56, -31, 75, 27, 5, 66, -26, 40, 68, 29, 36, -58, 27, 58, 2, -83, -99, 105,
+    92, -85, -26, 18, -99, -69, 20, -64, 76, 110, 101, -46, -102, 23, -95, 65,
+    -116, -93, 12, 82, 101, -109, -128, 70, 63, -39, 67, -28
+  )
+
+  private val resultArray: Array[Byte] = Array(
+    0, 0, 0, 12, 0, 0, 0, 23, 0, 3, 34, -24, 0, 0, 0, 0, 99, 15, -10, 2, 22,
+    106, -59, 0, 0, 0, 0, 24, 0, 84, 0, 104, 0, 117, 0, 32, 0, 48, 0, 48, 0, 58,
+    0, 52, 0, 51, 0, 58, 0, 51, 0, 48, 66, -120, 0, 0, 66, -119, 0, 0, 127, -64,
+    0, 0, 127, -64, 0, 0, 37, 33, 37, 9
+  )
+
 
   def main(args: Array[String]) = {}
 
   /** *****************************************************************************************************************
     */
   private[this] val dim = 2
-  private[this] val keyStorePath = Paths.get("keystore")
+  private[this] val keyStorePath = Paths.get("/Users/og_pixel/.m2g-data-viewer/keystore")
   private[this] val keyStoreManager = new KeyStoreManager(
     KeyStorePathInfo(keyStorePath, "m2g".toCharArray)
   )
@@ -71,6 +96,64 @@ object Main {
 
   val params = new KeyParameter(key)
 
+
+  private val decryptAndUnshiftClass = new DecryptAndUnshift(cipherFactory, keyParam)(shift) //(shiftArray)
+  private val encryptAndShiftClass = new EncryptAndShift(cipherFactory,
+    keyParam, new Random())(shift) //(shiftArray)
+
+
+
+  def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
+    try {
+      val out = new Array[Byte](72) // Adjust the size as needed
+      var outOffset = 0
+      var inOffset = 0
+      var processedBytes = 0
+      while (processedBytes != 16) {
+        processedBytes =
+          decryptAndUnshiftClass.processBlock(out, outOffset, in, inOffset, 24)
+        outOffset += 16
+        inOffset += 24
+      }
+
+      Some(out)
+    } catch {
+      case e: Exception =>
+        println(s"Failed: ${e.printStackTrace()}")
+        None
+    }
+
+  }
+
+  def encryptAndShift(in: Array[Byte]): Option[Array[Byte]] = {
+    try {
+      val out = new Array[Byte](112) // Adjust the size as needed
+      var outOffset = 0
+      var inOffset = 0
+      var processedBytes = 0
+      while (processedBytes != 16) {
+        processedBytes =
+          encryptAndShiftClass.processBlock(out, outOffset, in, inOffset, 16)
+//        outOffset += 16
+//        inOffset += 24
+        outOffset += 24
+        inOffset += 16
+      }
+
+      Some(out)
+    } catch {
+      case e: Exception =>
+        println(s"Failed: ${e.printStackTrace()}")
+        None
+    }
+  }
+
+
+
+
+
+
+
   //Based on Decrypt and Unshift function with a loop to process the entire thing
   //TODO  I did this first but I think the second decrypt has better odds of working
   def decrypt(in: Array[Byte]): Option[Array[Byte]] = {
@@ -119,7 +202,7 @@ object Main {
         processedBytes += bytes
       }
 
-      result += out
+      result.appendedAll(out)
       outOffset += 16
       inOffset += 24
     }

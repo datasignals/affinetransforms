@@ -1,5 +1,7 @@
 package com.datasignals.affinetransforms.transformation.helpers
 
+import com.datasignals.affinetransforms.transformation.{GenericArrayTransformation, GenericBlockTransformation, GenericBlockWrapper}
+
 import java.util.concurrent.{Callable, ExecutorService, Future}
 import scala.reflect.ClassTag
 
