@@ -131,13 +131,17 @@ object Main {
       var outOffset = 0
       var inOffset = 0
       var processedBytes = 0
-      while (processedBytes != 16) {
+
+      //TODO I am not sure exactly why, but counting by
+      // "processed blocks" is not working well
+      // Instead I think it should do 112 / 16 = 7
+      var iterations = 0
+      while (iterations < 8) {
         processedBytes =
           encryptAndShiftClass.processBlock(out, outOffset, in, inOffset, 16)
-//        outOffset += 16
-//        inOffset += 24
         outOffset += 24
         inOffset += 16
+        iterations += 1
       }
 
       Some(out)
