@@ -132,6 +132,7 @@ object Main {
   // defradingParameters
 //  val nativeMatrixMixer = new NativeMatrixMixer(dim, defradingParameters.matrix)
 val dynamicMatrixMixer = DynamicMatrixMixer(dim, defradingParameters.matrix)
+  val dynamicMatrixSplitter = DynamicMatrixSplitter(dim, defradingParameters.matrix)
 
   def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
     try {
@@ -193,7 +194,18 @@ val dynamicMatrixMixer = DynamicMatrixMixer(dim, defradingParameters.matrix)
   }
 
   //Formerly Splitter
-  def disassemble() = {}
+  def disassemble(in: ArrayIndex[Byte]): Array[ArrayIndex[Byte]] = {
+    val out: Array[ArrayIndex[Byte]] = Array(
+      //TODO this division by two might be problematic
+      //TODO I also divide by two because I expect two Shares
+      new ArrayIndex[Byte](new Array(in.length / 2), 0, in.length / 2),
+      new ArrayIndex[Byte](new Array(in.length / 2), 0, in.length / 2)
+    )
+
+
+    dynamicMatrixSplitter.apply(out, in)
+    out
+  }
 
 
 

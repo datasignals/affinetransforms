@@ -13,7 +13,6 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 
 javaOptions += "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED java.library.path=/Users/og_pixel/workspace/transforms/blumamba-splitter-native/src/native/build"
 Compile / test / javaOptions += "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -Djava.library.path=/Users/og_pixel/workspace/transforms/blumamba-splitter-native/src/native/build"
-fork := true
 
 mainClass := Some("com.datasignals.affinetransforms.Main")
 

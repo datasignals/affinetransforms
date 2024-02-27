@@ -1,6 +1,6 @@
 package com.datasignals.affinetransforms
 
-import com.datasignals.affinetransforms.entry.Bits
+import com.datasignals.affinetransforms.entry.{ArrayIndex, Bits}
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
 import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager, KeyStorePathInfo}
 import com.datasignals.affinetransforms.m2g.{Decrypt, Unshift}
@@ -91,10 +91,41 @@ object Spec extends TestSuite with Data {
     }
 
 
-    test("Just mixing test") - {
+    test("Mixing Test") - {
       val mixResult = Main.assemble(arrayIndex)
 
-      println("Mix Result: " + mixResult.mkString("", ", ", ""))
+      val decryptAndUnshiftResult = Main.decryptAndUnshift(mixResult)
+
+      decryptAndUnshiftResult.foreach { value =>
+        println("Result: " + value.mkString("Array(", ", ", ")"))
+      }
+
+      //TODO no value to compare it to, but return result has 0,0,0,12.
+      // Indicating it should be correct
+    }
+
+    test("Splitting Test") - {
+      val disassembleResult = Main.disassemble(
+        new ArrayIndex(inputArray, 0, inputArray.length)
+      )
+
+      val assembleBack = Main.assemble(
+        disassembleResult
+      )
+
+      val decryptAndUnshift = Main.decryptAndUnshift(
+        assembleBack
+      )
+
+      println("Input: " + inputArray.mkString("Array(", ", ", ")"))
+      println("Decrypted: " + decryptAndUnshift.get.mkString("Array(", ", ", ")"))
+
+//      disassembleResult.foreach { e =>
+//        println("Disassemble: " + e.array.mkString("", ", ", ""))
+//      }
+//
+//      println("Input: " + inputArray.mkString("Array(", ", ", ")"))
+//      println("Result: " + assembleBack.mkString("Array(", ", ", ")"))
     }
 
 
