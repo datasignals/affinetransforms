@@ -3,7 +3,7 @@ package com.datasignals.affinetransforms
 import com.datasignals.affinetransforms.entry.{ArrayIndex, Bits}
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
 import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager, KeyStorePathInfo}
-import com.datasignals.affinetransforms.m2g.{Decrypt, Unshift}
+import com.datasignals.affinetransforms.transformation.{DecryptAndUnshift, EncryptAndShift}
 import org.bouncycastle.crypto.engines.AESEngine
 import org.bouncycastle.crypto.params.KeyParameter
 import utest.{TestSuite, Tests, test}

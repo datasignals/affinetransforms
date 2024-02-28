@@ -1,20 +1,18 @@
-package com.datasignals.affinetransforms
-
-//import ch.jodersky.jni.nativeLoader
+package com.datasignals.affinetransforms.transformation
 
 import com.datasignals.affinetransforms.entry.ArrayIndex
 import com.github.sbt.jni.nativeLoader
 import datasignals.transform.matrix.jni.JNativeMatrixSplitter
 
 @nativeLoader("msplit0")
-object ConcurrentNativeMatrixSplitter {
+object NativeMatrixSplitter {
 
-  @inline private def split(out: Array[ArrayIndex[Byte]], matrix: Array[Long], dimension: Int, in: ArrayIndex[Byte],
-                            nThreads: Int): Unit = {
+  @inline private def split(out: Array[ArrayIndex[Byte]], matrix: Array[Long], dimension: Int, in: ArrayIndex[Byte]): Unit = {
     val positions = new Array[Int](dimension)
     val arrays = new Array[Array[Byte]](dimension)
     extractArrayIndices(arrays, positions, out, dimension)
-    JNativeMatrixSplitter.concurrentSplit(arrays, positions, matrix, dimension, in.array, in.position, in.length, nThreads)
+
+    JNativeMatrixSplitter.split(arrays, positions, matrix, dimension, in.array, in.position, in.length)
   }
 
   @inline private def extractArrayIndices(arrays: Array[Array[Byte]], positions: Array[Int],
@@ -28,11 +26,10 @@ object ConcurrentNativeMatrixSplitter {
   }
 }
 
-class ConcurrentNativeMatrixSplitter(override val dimension: Int, private[this] val matrix: Array[Long],
-                                     private[this] val nThreads: Int)
+class NativeMatrixSplitter(override val dimension: Int, private[this] val matrix: Array[Long])
   extends Splitter[ArrayIndex[Byte]] {
 
   @inline override def apply(out: Array[ArrayIndex[Byte]], in: ArrayIndex[Byte]): Unit =
-    ConcurrentNativeMatrixSplitter.split(out, matrix, dimension, in, nThreads)
+    NativeMatrixSplitter.split(out, matrix, dimension, in)
 
 }

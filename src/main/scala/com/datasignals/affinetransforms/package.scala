@@ -1,7 +1,5 @@
 package com.datasignals.affinetransforms
 
-import com.datasignals.affinetransforms.entry.Record
-
 import java.io.{InputStream, OutputStream}
 import java.nio.file.{Files, Path}
 import java.security.{KeyStore, SecureRandom, Security}
@@ -132,25 +130,4 @@ package object string {
 
 package object transformation {
   type BlockTransformation = GenericBlockTransformation[Byte, Byte]
-  //type BlockWrapper = GenericBlockWrapper[Byte, Byte]
-  //type StreamTransformation = GenericStreamTransformation[Byte, Byte]
-  //type ArrayTransformation = GenericArrayTransformation[Byte, Byte]
-}
-
-package object record {
-  final type SemiRawRecord[K] = Record[K, Array[Byte]]
-  final type RawRecord = SemiRawRecord[Array[Byte]]
-  final type RecordFactory[K, V] = (K, V) => Record[K, V]
-  final type SemiRawRecordFactory[K] = RecordFactory[K, Array[Byte]]
-  final type RawRecordFactory = SemiRawRecordFactory[Array[Byte]]
-}
-
-package object reflection {
-
-  //The following two methods is for a workaround the scala bug https://github.com/scala/bug/issues/8302
-  @inline
-  def clear(): Unit = universe.asInstanceOf[scala.reflect.runtime.JavaUniverse].undoLog.clear()
-  @inline
-  def undo[T](block: => T): T = universe.asInstanceOf[scala.reflect.runtime.JavaUniverse].undoLog.undo(block)
-
 }

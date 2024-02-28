@@ -1,6 +1,5 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.entry
 
-import com.datasignals.affinetransforms.entry.Bits
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
 import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager}
 

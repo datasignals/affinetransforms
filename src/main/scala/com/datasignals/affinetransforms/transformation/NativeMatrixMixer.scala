@@ -1,4 +1,4 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.transformation
 
 import com.datasignals.affinetransforms.entry.ArrayIndex
 import com.github.sbt.jni.nativeLoader

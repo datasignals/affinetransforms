@@ -1,7 +1,7 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.transformation
 
-import com.datasignals.affinetransforms.DynamicMatrixMixer.MaxParallelism
-import com.datasignals.affinetransforms.entry.ArrayIndex
+import com.datasignals.affinetransforms.entry.{ArrayIndex, OrderedChoice}
+import com.datasignals.affinetransforms.transformation.DynamicMatrixMixer.MaxParallelism
 
 import java.lang.Long.{BYTES => LONG_BYTES}
 import java.util.{NavigableMap, TreeMap}

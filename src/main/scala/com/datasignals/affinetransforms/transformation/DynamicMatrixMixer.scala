@@ -1,6 +1,6 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.transformation
 
-import com.datasignals.affinetransforms.entry.ArrayIndex
+import com.datasignals.affinetransforms.entry.{ArrayIndex, OrderedChoice}
 
 import java.lang.Long.{BYTES => LONG_BYTES}
 import java.util.{NavigableMap, TreeMap}

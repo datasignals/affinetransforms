@@ -1,4 +1,4 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.transformation
 
 //import ch.jodersky.jni.nativeLoader
 import com.datasignals.affinetransforms.entry.ArrayIndex

@@ -1,4 +1,4 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.entry
 
 import java.util.NavigableMap
 

@@ -1,8 +1,7 @@
-package com.datasignals.affinetransforms
+package com.datasignals.affinetransforms.transformation
 
 import com.datasignals.affinetransforms.entry.Bits
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
-import com.datasignals.affinetransforms.transformation.BlockTransformation
 import org.bouncycastle.crypto.BlockCipher
 import org.bouncycastle.crypto.params.KeyParameter
 
