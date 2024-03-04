@@ -113,16 +113,17 @@ object Main {
 
   def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
     try {
-      val out = new Array[Byte](72) // Adjust the size as needed
+//      val out = new Array[Byte](72) // Adjust the size as needed
+      val out = new Array[Byte]((24 * 2) + 16) // Adjust the size as needed
       var outOffset = 0
       var inOffset = 0
       var processedBytes = 0
-      while (processedBytes != 16) {
+//      while (processedBytes != 16) {
         processedBytes =
           decryptAndUnshiftClass.processBlock(out, outOffset, in, inOffset, 24)
         outOffset += 16
         inOffset += 24
-      }
+//      }
 
       Some(out)
     } catch {
@@ -162,7 +163,8 @@ object Main {
 
   //Formerly Mixer
   def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
-    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(112), 0, 112)
+//    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(112), 0, 112)
+    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(24 * 2), 0, 24 * 2)
 
     dynamicMatrixMixer.apply(out, in)
 
@@ -190,16 +192,16 @@ object Main {
   ): Array[Byte] = {
 //    val ftotal = preMixedArray(0).length
 
-    val ftotal =
-      56 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+//    val ftotal = 56 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+    val ftotal = 24//this is just what I found when running m2g-data-viewer, this might be inconsitent
     val total = dim * ftotal
 
     //LR = INT_BYTES so INT_BYTES - INT_BYTES = 0
     val r = Bits.getIntUnsafe(in, 0)
 //    val n = t.length(total - INT_BYTES + (if(r > 0) r - d else 0))
 
-    val n =
-      64 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+//    val n = 64 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+    val n = 24 //this is just what I found when running m2g-data-viewer, this might be inconsitent
 
     val value = new Array[Byte](n)
     System.arraycopy(in, INT_BYTES, value, 0, n)

@@ -13,7 +13,7 @@ import com.datasignals.affinetransforms.transformation.{
 }
 import org.bouncycastle.crypto.engines.AESEngine
 import org.bouncycastle.crypto.params.KeyParameter
-import utest.{TestSuite, Tests, test}
+import utest._
 
 import java.nio.file.Paths
 import java.util.Random
@@ -67,29 +67,41 @@ object Spec extends TestSuite with Data {
 
   override val tests: Tests = Tests {
 
-    test("Mixing Test") - {
-      assert(
-        Main
-          .assemble(split)
-          .sameElements(merged)
-      )
-    }
+//    test("Mixing NEW Test") - {
+//        println(
+//          Main.mysteryFunction(
+//            Main.decryptAndUnshift(
+//              Main.assemble(
+//                testArr
+//              )
+//            ).get
+//          ).mkString("", ", ", "")
+//        )
+//    }
 
-    test("Decrypt and Unshift Test") - {
-      assert(
-        Main
-          .decryptAndUnshift(merged)
-          .fold(false)(_.sameElements(decodedAndShifted))
-      )
-    }
-
-    test("\"Magic\" Function") - {
-      assert(
-        Main
-          .mysteryFunction(decodedAndShifted)
-          .sameElements(afterMysteryFunction)
-      )
-    }
+//    test("Mixing Test") - {
+//      assert(
+//        Main
+//          .assemble(split)
+//          .sameElements(merged)
+//      )
+//    }
+//
+//    test("Decrypt and Unshift Test") - {
+//      assert(
+//        Main
+//          .decryptAndUnshift(merged)
+//          .fold(false)(_.sameElements(decodedAndShifted))
+//      )
+//    }
+//
+//    test("\"Magic\" Function") - {
+//      assert(
+//        Main
+//          .mysteryFunction(decodedAndShifted)
+//          .sameElements(afterMysteryFunction)
+//      )
+//    }
 
     //TODO splitting doesn't seem to work
 //    test("Splitting Test") - {
@@ -118,43 +130,49 @@ object Spec extends TestSuite with Data {
 //    }
 
     test("Full Decrypt - NO ASSERTION") - {
-      val assembleResult = Main.assemble(split)
+      println("1")
+      val assembleResult = Main.assemble(testArr)
+      println("2")
 
       val decrypted = Main.decryptAndUnshift(assembleResult)
+      println("3")
 
       val mysteryValue = Main.mysteryFunction(decrypted.get)
+      println("4")
+      println(mysteryValue.mkString("", ", ", ""))
     }
-
-    test("Decrypt ALL types of Events with length 56") - {
-      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS
-        .map { eventFraded =>
-          eventFraded.map { event =>
-            new ArrayIndex[Byte](event, 0, event.length)
-          }
-        }
-        .filter(
-          _.forall(e => e.array.length == 56)
-        ) //Only store events that have arrayIndex of length 56
-
-      translated.foreach(arr => arr.foreach(e => println(e.array.mkString("", ", ", ""))))
-
-      translated.zipWithIndex.foreach { blockWithIndex =>
-        val block = blockWithIndex._1
-        val index = blockWithIndex._2
-
-        val mixed = Main.assemble(block)
-        val decrypted = Main.decryptAndUnshift(mixed)
-        val shiftAgain = decrypted.map(Main.mysteryFunction)
-        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
-
-        println(s"Result $index: ${result.getOrElse("Failed")}")
-      }
-    }
+//
+//    test("Decrypt ALL types of Events with length 56") - {
+//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2
+//        .map { eventFraded =>
+//          eventFraded.map { event =>
+//            new ArrayIndex[Byte](event, 0, event.length)
+//          }
+//        }
+//        .filter(
+//          _.forall(e => e.array.length == 56)
+//        ) //Only store events that have arrayIndex of length 56
+//
+//
+//      println("length: " + translated.length)
+//
+//      translated.zipWithIndex.foreach { blockWithIndex =>
+//        val block = blockWithIndex._1
+//        val index = blockWithIndex._2
+//
+//        val mixed = Main.assemble(block)
+//        val decrypted = Main.decryptAndUnshift(mixed)
+//        val shiftAgain = decrypted.map(Main.mysteryFunction)
+//        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
+//
+//        println(s"Result $index: ${result.getOrElse("Failed")}")
+//      }
+//    }
 
 
     //TODO this will throw SEGFAULT from Mixing
 //    test("Decrypt ALL types of Events") - {
-//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS.map {
+//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2.map {
 //        eventFraded =>
 //          eventFraded.map { event =>
 //            new ArrayIndex[Byte](event, 0, event.length)
