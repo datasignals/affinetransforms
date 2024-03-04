@@ -171,26 +171,26 @@ object Spec extends TestSuite with Data {
 
 
     //TODO this will throw SEGFAULT from Mixing
-//    test("Decrypt ALL types of Events") - {
-//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2.map {
-//        eventFraded =>
-//          eventFraded.map { event =>
-//            new ArrayIndex[Byte](event, 0, event.length)
-//          }
-//      }
-//
-//      translated.zipWithIndex.foreach { blockWithIndex =>
-//        val block = blockWithIndex._1
-//        val index = blockWithIndex._2
-//
-//        val mixed = Main.assemble(block)
-//        val decrypted = Main.decryptAndUnshift(mixed)
-//        val shiftAgain = decrypted.map(Main.mysteryFunction)
-//        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
-//
-//        println(s"Result $index: ${result.getOrElse("Failed")}")
-//      }
-//    }
+    test("Decrypt ALL types of Events") - {
+      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2.map {
+        eventFraded =>
+          eventFraded.map { event =>
+            new ArrayIndex[Byte](event, 0, event.length)
+          }
+      }
+
+      translated.zipWithIndex.foreach { blockWithIndex =>
+        val block = blockWithIndex._1
+        val index = blockWithIndex._2
+
+        val mixed = Main.assemble(block)
+        val decrypted = Main.decryptAndUnshift(mixed)
+        val shiftAgain = decrypted.map(Main.mysteryFunction)
+        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
+
+        println(s"Result $index: ${result.getOrElse("Failed")}")
+      }
+    }
 
   }
 
