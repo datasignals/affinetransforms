@@ -97,8 +97,12 @@ object Main {
 
   val params = new KeyParameter(key)
 
+
   private val decryptAndUnshiftClass =
     new DecryptAndUnshift(cipherFactory, keyParam)(shift) //(shiftArray)
+
+
+
   private val encryptAndShiftClass =
     new EncryptAndShift(cipherFactory, keyParam, new Random())(
       shift
@@ -159,6 +163,10 @@ object Main {
         None
     }
 
+  }
+
+  def newDecryptAndUnshift(in: Array[Byte]): Array[Byte] = {
+    decryptAndUnshiftClass.apply(in)
   }
 
   def encryptAndShift(in: Array[Byte]): Option[Array[Byte]] = {

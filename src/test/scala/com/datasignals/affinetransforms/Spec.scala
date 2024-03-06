@@ -67,6 +67,26 @@ object Spec extends TestSuite with Data {
 
   override val tests: Tests = Tests {
 
+    test("new decrypt test") - {
+      val merged = Main.assemble(longSplit)
+
+      val assembledOldVersion = Main.decryptAndUnshift(merged)
+
+      val aseemebleNewVersion = Main.newDecryptAndUnshift(merged)
+
+      println("Old: " + assembledOldVersion.get.mkString("", ", ", ""))
+      println("New: " + aseemebleNewVersion.mkString("", ", ", ""))
+
+      val merged2 = Main.assemble(split)
+
+      val assembledOldVersion2 = Main.decryptAndUnshift(merged2)
+
+      val aseemebleNewVersion2 = Main.newDecryptAndUnshift(merged2)
+
+      println("Old2: " + assembledOldVersion2.get.mkString("", ", ", ""))
+      println("New2: " + aseemebleNewVersion2.mkString("", ", ", ""))
+    }
+
 //    test("Mixing Test") - {
 //      assert(
 //        Main
@@ -141,35 +161,35 @@ object Spec extends TestSuite with Data {
 //      println("Result: " + assembleBack.mkString("Array(", ", ", ")"))
 //    }
 
-    test("Full Decrypt - NO ASSERTION") - {
-      println("longSplit1 length: " + longSplit1.length)        // 80 makes sense
-//      println("longMerge length: " + longSplit1.length)       // 160 -> 80 * 2 = 120 ----- makes sense
-//      println("longDecoded length: " + longSplit1.length)     // 104 ???? 120-16
-//      println("longMystery length: " + longSplit1.length)     // 100 ????
-
-      println("//////////")
-      println("split1 length: " + split1.length)                // 56 makes sense
-      println("merge length: " + merged.length)                 // 112 -> 56 * 2 = 112 ----- makes sense
-      println("decoded length: " + decodedAndShifted.length)    // 72 ????? 56 + 16 = 72 maybe ???? 112/2+16 = 72 I think ||| 112-40=72
-      println("mystery length: " + afterMysteryFunction.length) // 64 ???? 72 - 8 = 64 maybe
-      //Processed bytes is always 24
-
-
-      val assembleResult = Main.assemble(longSplit) //I believe this bit is right
-      println("assembled: " + assembleResult.mkString("", ", ", ""))
-      println("assembled len: " + assembleResult.length)
-
-      val decrypted = Main.decryptAndUnshift(assembleResult) //Added 8 for some reason, no good
-      println("decrypted: " + decrypted.get.mkString("", ", ", ""))
-      println("decrypted len: " + decrypted.get.length)
-
-      val mysteryValue = Main.mysteryFunction(decrypted.get, longSplit1.length)
-      println("mysterFun: " + mysteryValue.mkString("", ", ", ""))
-      println("mysterFun len: " + mysteryValue.length)
-
-      //TODO This is to make sure changes don't affect what already works
-//      assert(mysteryValue.sameElements(afterMysteryFunction))
-    }
+//    test("Full Decrypt - NO ASSERTION") - {
+//      println("longSplit1 length: " + longSplit1.length)        // 80 makes sense
+////      println("longMerge length: " + longSplit1.length)       // 160 -> 80 * 2 = 120 ----- makes sense
+////      println("longDecoded length: " + longSplit1.length)     // 104 ???? 120-16
+////      println("longMystery length: " + longSplit1.length)     // 100 ????
+//
+//      println("//////////")
+//      println("split1 length: " + split1.length)                // 56 makes sense
+//      println("merge length: " + merged.length)                 // 112 -> 56 * 2 = 112 ----- makes sense
+//      println("decoded length: " + decodedAndShifted.length)    // 72 ????? 56 + 16 = 72 maybe ???? 112/2+16 = 72 I think ||| 112-40=72
+//      println("mystery length: " + afterMysteryFunction.length) // 64 ???? 72 - 8 = 64 maybe
+//      //Processed bytes is always 24
+//
+//
+//      val assembleResult = Main.assemble(longSplit) //I believe this bit is right
+//      println("assembled: " + assembleResult.mkString("", ", ", ""))
+//      println("assembled len: " + assembleResult.length)
+//
+//      val decrypted = Main.decryptAndUnshift(assembleResult) //Added 8 for some reason, no good
+//      println("decrypted: " + decrypted.get.mkString("", ", ", ""))
+//      println("decrypted len: " + decrypted.get.length)
+//
+//      val mysteryValue = Main.mysteryFunction(decrypted.get, longSplit1.length)
+//      println("mysterFun: " + mysteryValue.mkString("", ", ", ""))
+//      println("mysterFun len: " + mysteryValue.length)
+//
+//      //TODO This is to make sure changes don't affect what already works
+////      assert(mysteryValue.sameElements(afterMysteryFunction))
+//    }
 
 //    test("Decrypt ALL types of Events") - {
 //      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS.map {
