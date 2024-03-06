@@ -114,7 +114,7 @@ class DecryptAndUnshift(private[this] val cipher: () => BlockCipher,
     val nBlocks = info.numberOfBlocks
     val out = new Array[Byte](info.outLength)
     val fLength = nFutures(nBlocks)
-    println("nBlocks: " + nBlocks)
+//    println("nBlocks: " + nBlocks)
 //    val futures = new Array[Future[Unit]](fLength)
 
     var outOffset = 0
@@ -122,9 +122,9 @@ class DecryptAndUnshift(private[this] val cipher: () => BlockCipher,
     val inLength = blocksPerThread * inBlockSize
     val outLength = blocksPerThread * outBlockSize
     var i = 0
-    println("inLength: " + inLength)
-    println("outLength: " + outLength)
-    println("outOffset: " + outOffset)
+//    println("inLength: " + inLength)
+//    println("outLength: " + outLength)
+//    println("outOffset: " + outOffset)
     while (i < fLength) {
       //System.err.println(s"Out length: ${out.length}, out offset: $outOffset, data length: ${data.length}, in offset: $inOffset, inLength: $inLength")
 
@@ -143,8 +143,6 @@ class DecryptAndUnshift(private[this] val cipher: () => BlockCipher,
     out
   }
 
-
-
-
-
+  def length(inputLength: Int): Int =
+    GenericBlockTransformation.blockInfo(inputLength, this.inBlockSize, this.outBlockSize).outLength
 }
