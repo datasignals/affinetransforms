@@ -116,19 +116,41 @@ object Main {
 //      val out = new Array[Byte](72) // Adjust the size as needed
 //      val out = new Array[Byte]((24 * 2) + 16) // Adjust the size as needed
 
-      val out = new Array[Byte]((in.length * 2) + 16) // Adjust the size as needed
+//      val out = new Array[Byte]((in.length * 2) + 16) // Adjust the size as needed
+
+      val out = new Array[Byte]((in.length / 2) + 16 + 8) //TODO used different value here too
+//      println("in len: " + in.length)
 
 
       var outOffset = 0
       var inOffset = 0
-      var processedBytes = 0
+      var processedBytes = 24
       //TODO while loop possibly not needed
-//      while (processedBytes != 16) {
+
+      //(
+      //0, 0, 0, 10, 0, 0, 0, 26, 0, 0, 7, 62, 0, 0, 0, 0, 101, -27, -49, 125, 48, -25, -11, 96,
+      //0, 0, 0, 38, 0, 84, 0, 101, 0, 115, 0, 116, 0, 32, 0, 85, 0, 110, 0, 112, 0, 97, 0, 114,
+      //0, 115, 0, 101, 0, 100, 0, 32, 0, 69, 0, 118, 0, 101, 0, 110, 0, 116, -49, 49, 56, 89, 86, -117
+      // )
+
+      //0, 0, 0, 12, 0, 0, 0, 23, 0, 3, 34, -24, 0, 0, 0, 0, 99, 15, -10, 2, 22, 106, -59, 0, 0, 0, 0,
+      //24, 0, 84, 0, 104, 0, 117, 0, 32, 0, 48, 0, 48, 0, 58, 0, 52, 0, 51, 0, 58, 0, 51, 0, 48, 66,
+      //-120, 0, 0, 66, -119, 0, 0, 127, -64, 0, 0, 127, -64, 0, 0, 37, 33, 37, 9,
+      //56 elements
+      //TODO Iam 90% sure my current problem is due to lacking loop,
+      // it seems to be working fine otherwise
+      // even previously working event has no data now
+      while (processedBytes == 24) {
+//      var iterations = 0
+//      while (iterations < 8) {
         processedBytes =
           decryptAndUnshiftClass.processBlock(out, outOffset, in, inOffset, 24)
+//        println("process bytes: " + processedBytes)
         outOffset += 16
         inOffset += 24
+//        iterations += 1
 //      }
+      }
 
       Some(out)
     } catch {
@@ -196,7 +218,8 @@ object Main {
   // is doing some extra step before it can be
   // deserialised, this is this function
   def mysteryFunction(
-      in: Array[Byte] /*, preMixedArray: Array[ArrayIndex[Byte]]*/
+      in: Array[Byte], /*, preMixedArray: Array[ArrayIndex[Byte]]*/
+      mixLen: Int
   ): Array[Byte] = {
 //    val ftotal = preMixedArray(0).length
 
@@ -206,7 +229,9 @@ object Main {
 //    println("in length: " + ((in.length / 2) - (32)))
 //    val ftotal = in.length//this is just what I found when running m2g-data-viewer, this might be inconsitent
 
-    val ftotal = (in.length / 2) - 32
+//    val ftotal = (in.length / 2) - 32
+
+    val ftotal = mixLen //From split array len
 
 
     val total = dim * ftotal
@@ -218,12 +243,19 @@ object Main {
 //    val n = 64 //this is just what I found when running m2g-data-viewer, this might be inconsitent
 //    val n = 24 //this is just what I found when running m2g-data-viewer, this might be inconsitent
 //    val n = in.length //this is just what I found when running m2g-data-viewer, this might be inconsitent
-    val n = (in.length / 2) - 32 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+//    val n = (in.length / 2) - 32 //this is just what I found when running m2g-data-viewer, this might be inconsitent
+
+    val n = in.length - 4// TODO this value is wrong all the time
+    // Minus 8 because int_bytes is 8
 
     val value = new Array[Byte](n)
     System.arraycopy(in, INT_BYTES, value, 0, n)
 
     value
   }
+
+
+  def fixLength(in: Array[Byte]): Array[Byte] =
+    in.reverse.dropWhile(_ == 0).reverse
 
 }

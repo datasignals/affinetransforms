@@ -67,18 +67,6 @@ object Spec extends TestSuite with Data {
 
   override val tests: Tests = Tests {
 
-//    test("Mixing NEW Test") - {
-//        println(
-//          Main.mysteryFunction(
-//            Main.decryptAndUnshift(
-//              Main.assemble(
-//                testArr
-//              )
-//            ).get
-//          ).mkString("", ", ", "")
-//        )
-//    }
-
 //    test("Mixing Test") - {
 //      assert(
 //        Main
@@ -86,16 +74,40 @@ object Spec extends TestSuite with Data {
 //          .sameElements(merged)
 //      )
 //    }
-//
+
 //    test("Decrypt and Unshift Test") - {
-//      assert(
+//      println(
+//        Main
+//          .fixLength(
+//            Main
+//              .decryptAndUnshift(merged)
+//              .get
+//          )
+//          .mkString("", ", ", "")
+//      )
+//
+//      println(decodedAndShifted.mkString("", ", ", ""))
+
+//      val a = Main.fixLength(
 //        Main
 //          .decryptAndUnshift(merged)
-//          .fold(false)(_.sameElements(decodedAndShifted))
+//          .get
+//      )
+//
+//      assert(
+//        a.sameElements(decodedAndShifted)
 //      )
 //    }
-//
+
 //    test("\"Magic\" Function") - {
+//
+//      println(
+//        Main.mysteryFunction(decodedAndShifted).mkString("", ", ", "")
+//      )
+//      println(
+//        afterMysteryFunction.mkString("", ", ", "")
+//      )
+//
 //      assert(
 //        Main
 //          .mysteryFunction(decodedAndShifted)
@@ -130,67 +142,68 @@ object Spec extends TestSuite with Data {
 //    }
 
     test("Full Decrypt - NO ASSERTION") - {
-      println("1")
-      val assembleResult = Main.assemble(testArr)
-      println("2")
+      println("longSplit1 length: " + longSplit1.length)        // 80 makes sense
+//      println("longMerge length: " + longSplit1.length)       // 160 -> 80 * 2 = 120 ----- makes sense
+//      println("longDecoded length: " + longSplit1.length)     // 104 ???? 120-16
+//      println("longMystery length: " + longSplit1.length)     // 100 ????
 
-      val decrypted = Main.decryptAndUnshift(assembleResult)
-      println("3")
+      println("//////////")
+      println("split1 length: " + split1.length)                // 56 makes sense
+      println("merge length: " + merged.length)                 // 112 -> 56 * 2 = 112 ----- makes sense
+      println("decoded length: " + decodedAndShifted.length)    // 72 ????? 56 + 16 = 72 maybe ???? 112/2+16 = 72 I think ||| 112-40=72
+      println("mystery length: " + afterMysteryFunction.length) // 64 ???? 72 - 8 = 64 maybe
+      //Processed bytes is always 24
 
-      val mysteryValue = Main.mysteryFunction(decrypted.get)
-      println("4")
-      println(mysteryValue.mkString("", ", ", ""))
+
+      val assembleResult = Main.assemble(longSplit) //I believe this bit is right
+      println("assembled: " + assembleResult.mkString("", ", ", ""))
+      println("assembled len: " + assembleResult.length)
+
+      val decrypted = Main.decryptAndUnshift(assembleResult) //Added 8 for some reason, no good
+      println("decrypted: " + decrypted.get.mkString("", ", ", ""))
+      println("decrypted len: " + decrypted.get.length)
+
+      val mysteryValue = Main.mysteryFunction(decrypted.get, longSplit1.length)
+      println("mysterFun: " + mysteryValue.mkString("", ", ", ""))
+      println("mysterFun len: " + mysteryValue.length)
+
+      //TODO This is to make sure changes don't affect what already works
+//      assert(mysteryValue.sameElements(afterMysteryFunction))
     }
-//
-//    test("Decrypt ALL types of Events with length 56") - {
-//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2
-//        .map { eventFraded =>
+
+//    test("Decrypt ALL types of Events") - {
+//      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS.map {
+//        eventFraded =>
 //          eventFraded.map { event =>
 //            new ArrayIndex[Byte](event, 0, event.length)
 //          }
-//        }
-//        .filter(
-//          _.forall(e => e.array.length == 56)
-//        ) //Only store events that have arrayIndex of length 56
-//
-//
-//      println("length: " + translated.length)
+//      }
 //
 //      translated.zipWithIndex.foreach { blockWithIndex =>
 //        val block = blockWithIndex._1
 //        val index = blockWithIndex._2
+////        println("Block splits length: " + block(0).length)
 //
 //        val mixed = Main.assemble(block)
-//        val decrypted = Main.decryptAndUnshift(mixed)
-//        val shiftAgain = decrypted.map(Main.mysteryFunction)
-//        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
+////        println("mixed length: " + mixed.length)
+//        //TODO at this point everything is correct
 //
-//        println(s"Result $index: ${result.getOrElse("Failed")}")
+//        val decrypted = Main.decryptAndUnshift(mixed)
+////        println("decrypted length: " + decrypted.get.length)
+//        if(mixed.length == 112) {
+////          println("arr decrypted: " + decrypted.get.mkString("", ", ", ""))
+//        }
+//        println
+//
+//
+//
+//        val shiftAgain = decrypted.map(Main.mysteryFunction)
+//        val result =
+//          shiftAgain.map(e => e.mkString("", ", ", ""))
+//
+//        println(s"${result.getOrElse("Failed")}")
 //      }
 //    }
-
-
-    //TODO this will throw SEGFAULT from Mixing
-    test("Decrypt ALL types of Events") - {
-      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS_2.map {
-        eventFraded =>
-          eventFraded.map { event =>
-            new ArrayIndex[Byte](event, 0, event.length)
-          }
-      }
-
-      translated.zipWithIndex.foreach { blockWithIndex =>
-        val block = blockWithIndex._1
-        val index = blockWithIndex._2
-
-        val mixed = Main.assemble(block)
-        val decrypted = Main.decryptAndUnshift(mixed)
-        val shiftAgain = decrypted.map(Main.mysteryFunction)
-        val result = shiftAgain.map(e => e.mkString("", ", ", ""))
-
-        println(s"Result $index: ${result.getOrElse("Failed")}")
-      }
-    }
 
   }
 
