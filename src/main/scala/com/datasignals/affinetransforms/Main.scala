@@ -107,7 +107,7 @@ object Main {
     DynamicMatrixSplitter(dim, defradingParameters.matrix)
 
   //TODO fully working best version
-  def newDecryptAndUnshift(in: Array[Byte]): Array[Byte] = {
+  def decryptAndUnshift(in: Array[Byte]): Array[Byte] = {
     val decrypted = decryptAndUnshiftClass.apply(in)
 
 
@@ -124,36 +124,17 @@ object Main {
     value
   }
 
-  //TODO delete later
-//  def encryptAndShift(in: Array[Byte]): Option[Array[Byte]] = {
-//    try {
-//      val out = new Array[Byte](112) // Adjust the size as needed
-//      var outOffset = 0
-//      var inOffset = 0
-//      var processedBytes = 0
-//
-//      //TODO I am not sure exactly why, but counting by
-//      // "processed blocks" is not working well
-//      // Instead I think it should do 112 / 16 = 7
-//      var iterations = 0
-//      while (iterations < 8) {
-//        processedBytes =
-//          encryptAndShiftClass.processBlock(out, outOffset, in, inOffset, 16)
-//        outOffset += 24
-//        inOffset += 16
-//        iterations += 1
-//      }
-//
-//      Some(out)
-//    } catch {
-//      case e: Exception =>
-//        println(s"Failed: ${e.printStackTrace()}")
-//        None
-//    }
-//  }
+  //Formerly Mixer
+  def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
+    //TODO still considers only two dimensions
+    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(in(0).length * dim), 0, in(0).length * dim)
 
+    dynamicMatrixMixer.apply(out, in)
 
-  def newEncryptAndShift(in: Array[Byte]): Array[Byte] = {
+    out.array
+  }
+
+  def newEncryptAndShift(in: Array[Byte]): (Array[Byte], Int) = {
     //TODO I think this part works fine
     val encryptedData = encryptAndShiftClass.apply(in)
 
@@ -162,12 +143,12 @@ object Main {
     val n = value.length
     val nlr0 = n + LR
 
-    val nlr1 = M2GFradingProcessor.alignedLength(nlr0)
-    val nlr2 = t.length(nlr1)
+    val nlr1 = encryptAndShiftClass.alignedLength(nlr0)
+    val nlr2 = encryptAndShiftClass.length(nlr1)
 
     val extraLength = nlr1 - nlr0
 
-    val nlr = if(extraLength > 0) t.length(nlr0) else nlr2
+    val nlr = if(extraLength > 0) encryptAndShiftClass.length(nlr0) else nlr2
     val r = nlr % d
     val ftotal = ((nlr / d) + (if (r > 0) 1 else 0)) << LOG_LONG_BYTES
     val total = ftotal * dim
@@ -186,7 +167,7 @@ object Main {
     }
 
 
-    val nlrArray = t(nlr0Array)
+    val nlrArray = encryptAndShiftClass(nlr0Array)
 
 
     val inArray = new Array[Byte](total)
@@ -195,13 +176,16 @@ object Main {
     random.nextBytes(pad)
     System.arraycopy(pad, 0, inArray, nlr2, padl)
 
+    (inArray, ftotal)
 
-    val out = new Array[ArrayIndex[Byte]](dim)
-    for (i <- 0 until dim) {
-      out(i) = new ArrayIndex[Byte](new Array[Byte](ftotal), 0)
-    }
 
-    out
+
+//    val out = new Array[ArrayIndex[Byte]](dim)
+//    for (i <- 0 until dim) {
+//      out(i) = new ArrayIndex[Byte](new Array[Byte](ftotal), 0)
+//    }
+//
+//    out
 
 //    splitter(out, new ArrayIndex[Byte](inArray, 0))
 //
@@ -212,18 +196,22 @@ object Main {
 //    new M2GSemiRawRecord(key, out(i).array)
   }
 
-  //Formerly Mixer
-  def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
-    //TODO still considers only two dimensions
-    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(in(0).length * dim), 0, in(0).length * dim)
 
-    dynamicMatrixMixer.apply(out, in)
-
-    out.array
-  }
 
   //Formerly Splitter
-  def disassemble(in: ArrayIndex[Byte]): Array[ArrayIndex[Byte]] = {
+  def disassemble(in: Array[Byte], ftotal: Int): Array[ArrayIndex[Byte]] = {
+    val out: Array[ArrayIndex[Byte]] = Array(
+      //TODO this division by two might be problematic
+      //TODO I also divide by two because I expect two Shares
+      new ArrayIndex[Byte](new Array[Byte](ftotal), 0),
+      new ArrayIndex[Byte](new Array[Byte](ftotal), 0)
+    )
+
+    dynamicMatrixSplitter.apply(out, new ArrayIndex[Byte](in, 0))
+    out
+  }
+
+  def newDisassemble(in: ArrayIndex[Byte]): Array[ArrayIndex[Byte]] = {
     val out: Array[ArrayIndex[Byte]] = Array(
       //TODO this division by two might be problematic
       //TODO I also divide by two because I expect two Shares
@@ -234,34 +222,5 @@ object Main {
     dynamicMatrixSplitter.apply(out, in)
     out
   }
-
-//  def newDissasemle(in: ArrayIndex[Byte]): Array[ArrayIndex[Byte]] = {
-//    val value = in
-//
-//    val n = value.length
-//    val nlr0 = n + LR
-//
-//    val nlr1 = M2GFradingProcessor.alignedLength(nlr0)
-//    val nlr2 = t.length(nlr1)
-//
-//    val extraLength = nlr1 - nlr0
-//    val nlr = if(extraLength > 0) t.length(nlr0) else nlr2
-//    val ftotal = ((nlr / d) + (if (r > 0) 1 else 0)) << LOG_LONG_BYTES
-//  }
-
-  //TODO no longer needed, part of the decrpyt now
-//  def newMysteryFunction(in: Array[Byte], lenOfSplitArr: Int): Array[Byte] = {
-//    val ftotal = lenOfSplitArr
-//    val total = dim * ftotal
-//
-//    val r = Bits.getIntUnsafe(in, LR - INT_BYTES)
-//
-//    val n = decryptAndUnshiftClass.length(total - LR + (if(r > 0) r - d else 0))
-//
-//    val value = new Array[Byte](n)
-//    System.arraycopy(in, LR, value, 0, n)
-//
-//    value
-//  }
 
 }

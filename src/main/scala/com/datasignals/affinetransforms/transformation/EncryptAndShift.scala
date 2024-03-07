@@ -110,7 +110,7 @@ class EncryptAndShift(private[this] val cipher: () => BlockCipher,
     val nBlocks = info.numberOfBlocks
     val out = new Array[Byte](info.outLength)
     val fLength = nFutures(nBlocks)
-    val futures = new Array[Future[Unit]](fLength)
+
     var outOffset = 0
     var inOffset = 0
     val inLength = blocksPerThread * inBlockSize
@@ -129,4 +129,11 @@ class EncryptAndShift(private[this] val cipher: () => BlockCipher,
 
   def length(inputLength: Int): Int =
     GenericBlockTransformation.blockInfo(inputLength, this.inBlockSize, this.outBlockSize).outLength
+
+
+  def alignedLength(length: Int): Int = {
+    val aligned = (length >> LOG_LONG_BYTES) << LOG_LONG_BYTES
+    if(aligned == length) return length
+    aligned + LONG_BYTES
+  }
 }

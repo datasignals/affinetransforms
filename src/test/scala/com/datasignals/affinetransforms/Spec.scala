@@ -194,23 +194,44 @@ object Spec extends TestSuite with Data {
 ////      assert(mysteryValue.sameElements(afterMysteryFunction))
 //    }
 
-    test("Decrypt ALL types of Events") - {
-      ALL_EVENTS.map {
-        eventFraded =>
-          eventFraded.map { event =>
-            new ArrayIndex[Byte](event, 0, event.length)
-          }
-      }.zipWithIndex.foreach { blockWithIndex =>
-        val block = blockWithIndex._1
-        val index = blockWithIndex._2
 
-        val mixed = Main.assemble(block)
-        val decrypted = Main.newDecryptAndUnshift(mixed)
+    test("Encrypt and Split") - {
+      val (a, b) = Main.newEncryptAndShift(SplitData.mergedAndDecrypted)
 
-        println(s"${decrypted.mkString("", ", ","")}")
-        /////////////////////////////////////////////
-      }
+      val z = Main.disassemble(a, b)
+
+      z.foreach(e => println(e.array.mkString("", ", ", "")))
     }
+
+//    test("Decrypt ALL types of Events") - {
+//      ALL_EVENTS.map {
+//        eventFraded =>
+//          eventFraded.map { event =>
+//            new ArrayIndex[Byte](event, 0, event.length)
+//          }
+//      }.zipWithIndex.foreach { blockWithIndex =>
+//        val block = blockWithIndex._1
+//        val index = blockWithIndex._2
+//
+//        println("len: " + block(0).length)
+//        val mixed = Main.assemble(block)
+//        val decrypted = Main.decryptAndUnshift(mixed)
+//
+//        println(s"${decrypted.mkString("", ", ","")}")
+//        /////////////////////////////////////////////
+//
+////        val (encryptedBack, ftotal) = Main.newEncryptAndShift(decrypted)
+////        val splitAgain = Main.disassemble(encryptedBack, ftotal)
+////
+//////        println("len after: " + splitAgain(0).length)
+////        /////////////////////////////////////////////
+////
+////        val mergedAgain = Main.assemble(splitAgain)
+////        val decryptedAgain = Main.decryptAndUnshift(mergedAgain)
+////
+////        println(s"${decryptedAgain.mkString("", ", ","")}")
+//      }
+//    }
 
   }
 
