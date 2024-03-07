@@ -15,6 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 import java.lang.Integer.{BYTES => INT_BYTES}
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 
 //Input Array    42,73,-98,-65,32,-115,44,124,107,109,-75,-8,55,116,120,-75,-10,-80,67,1,109,8,74,102,-58,-12,51,36,77,62,38,64,-33,102,50,16,-35,7,21,126,95,-123,-29,-72,-54,-95,72,106,-6,17,-9,-22,-41,17,-14,-104,-89,124,-84,87,40,50,107,-72,112,-29,-56,-31,75,27,5,66,-26,40,68,29,36,-58,27,58,2,-83,-99,105,92,-85,-26,18,-99,-69,20,-64,76,110,101,-46,-102,23,-95,65,-116,-93,12,82,101,-109,-128,70,63,-39,67,-28
 //Result Array   0,0,0,12,0,0,0,23,0,3,34,-24,0,0,0,0,99,15,-10,2,22,106,-59,0,0,0,0,24,0,84,0,104,0,117,0,32,0,48,0,48,0,58,0,52,0,51,0,58,0,51,0,48,66,-120,0,0,66,-119,0,0,127,-64,0,0,127,-64,0,0,37,33,37,9
@@ -91,9 +92,10 @@ object Main {
     new DecryptAndUnshift(cipherFactory, keyParam)(shift) //(shiftArray)
 
 
+  val random = new Random()
 
   private val encryptAndShiftClass =
-    new EncryptAndShift(cipherFactory, keyParam, new Random())(
+    new EncryptAndShift(cipherFactory, keyParam, random)(
       shift
     ) //(shiftArray)
 
@@ -104,94 +106,116 @@ object Main {
   private val dynamicMatrixSplitter =
     DynamicMatrixSplitter(dim, defradingParameters.matrix)
 
-  def decryptAndUnshift(in: Array[Byte]): Option[Array[Byte]] = {
-    try {
-//      val out = new Array[Byte](72) // Adjust the size as needed
-//      val out = new Array[Byte]((24 * 2) + 16) // Adjust the size as needed
-
-//      val out = new Array[Byte]((in.length * 2) + 16) // Adjust the size as needed
-
-      val out = new Array[Byte]((in.length / 2) + 16 + 8) //TODO used different value here too
-//      println("in len: " + in.length)
+  //TODO fully working best version
+  def newDecryptAndUnshift(in: Array[Byte]): Array[Byte] = {
+    val decrypted = decryptAndUnshiftClass.apply(in)
 
 
-      var outOffset = 0
-      var inOffset = 0
-      var processedBytes = 24
-      //TODO while loop possibly not needed
+    //This was part of the "mystery" function
+    val ftotal = in.length / 2
+    val total = dim * ftotal
 
-      //(
-      //0, 0, 0, 10, 0, 0, 0, 26, 0, 0, 7, 62, 0, 0, 0, 0, 101, -27, -49, 125, 48, -25, -11, 96,
-      //0, 0, 0, 38, 0, 84, 0, 101, 0, 115, 0, 116, 0, 32, 0, 85, 0, 110, 0, 112, 0, 97, 0, 114,
-      //0, 115, 0, 101, 0, 100, 0, 32, 0, 69, 0, 118, 0, 101, 0, 110, 0, 116, -49, 49, 56, 89, 86, -117
-      // )
+    val r = Bits.getIntUnsafe(decrypted, LR - INT_BYTES)
 
-      //0, 0, 0, 12, 0, 0, 0, 23, 0, 3, 34, -24, 0, 0, 0, 0, 99, 15, -10, 2, 22, 106, -59, 0, 0, 0, 0,
-      //24, 0, 84, 0, 104, 0, 117, 0, 32, 0, 48, 0, 48, 0, 58, 0, 52, 0, 51, 0, 58, 0, 51, 0, 48, 66,
-      //-120, 0, 0, 66, -119, 0, 0, 127, -64, 0, 0, 127, -64, 0, 0, 37, 33, 37, 9,
-      //56 elements
-      //TODO Iam 90% sure my current problem is due to lacking loop,
-      // it seems to be working fine otherwise
-      // even previously working event has no data now
-      while (processedBytes == 24) {
+    val n = decryptAndUnshiftClass.length(total - LR + (if(r > 0) r - d else 0))
+
+    val value = new Array[Byte](n)
+    System.arraycopy(decrypted, LR, value, 0, n)
+    value
+  }
+
+  //TODO delete later
+//  def encryptAndShift(in: Array[Byte]): Option[Array[Byte]] = {
+//    try {
+//      val out = new Array[Byte](112) // Adjust the size as needed
+//      var outOffset = 0
+//      var inOffset = 0
+//      var processedBytes = 0
+//
+//      //TODO I am not sure exactly why, but counting by
+//      // "processed blocks" is not working well
+//      // Instead I think it should do 112 / 16 = 7
 //      var iterations = 0
 //      while (iterations < 8) {
-        processedBytes =
-          decryptAndUnshiftClass.processBlock(out, outOffset, in, inOffset, 24)
-//        println("process bytes: " + processedBytes)
-        outOffset += 16
-        inOffset += 24
+//        processedBytes =
+//          encryptAndShiftClass.processBlock(out, outOffset, in, inOffset, 16)
+//        outOffset += 24
+//        inOffset += 16
 //        iterations += 1
 //      }
-      }
+//
+//      Some(out)
+//    } catch {
+//      case e: Exception =>
+//        println(s"Failed: ${e.printStackTrace()}")
+//        None
+//    }
+//  }
 
-      Some(out)
-    } catch {
-      case e: Exception =>
-        println(s"Failed: ${e.printStackTrace()}")
-        None
+
+  def newEncryptAndShift(in: Array[Byte]): Array[Byte] = {
+    //TODO I think this part works fine
+    val encryptedData = encryptAndShiftClass.apply(in)
+
+    val value = encryptedData
+
+    val n = value.length
+    val nlr0 = n + LR
+
+    val nlr1 = M2GFradingProcessor.alignedLength(nlr0)
+    val nlr2 = t.length(nlr1)
+
+    val extraLength = nlr1 - nlr0
+
+    val nlr = if(extraLength > 0) t.length(nlr0) else nlr2
+    val r = nlr % d
+    val ftotal = ((nlr / d) + (if (r > 0) 1 else 0)) << LOG_LONG_BYTES
+    val total = ftotal * dim
+
+
+    val padl = total - nlr2
+
+    val nlr0Array = new Array[Byte](nlr1)
+    Bits.putBytes(nlr0Array, LR - INT_BYTES, r)
+    System.arraycopy(value, 0, nlr0Array, LR, n)
+
+    if(extraLength > 0) {
+      val extra = new Array[Byte](extraLength)
+      random.nextBytes(extra)
+      System.arraycopy(extra, 0, nlr0Array, nlr0, extraLength)
     }
 
-  }
 
-  def newDecryptAndUnshift(in: Array[Byte]): Array[Byte] = {
-    decryptAndUnshiftClass.apply(in)
-  }
+    val nlrArray = t(nlr0Array)
 
-  def encryptAndShift(in: Array[Byte]): Option[Array[Byte]] = {
-    try {
-      val out = new Array[Byte](112) // Adjust the size as needed
-      var outOffset = 0
-      var inOffset = 0
-      var processedBytes = 0
 
-      //TODO I am not sure exactly why, but counting by
-      // "processed blocks" is not working well
-      // Instead I think it should do 112 / 16 = 7
-      var iterations = 0
-      while (iterations < 8) {
-        processedBytes =
-          encryptAndShiftClass.processBlock(out, outOffset, in, inOffset, 16)
-        outOffset += 24
-        inOffset += 16
-        iterations += 1
-      }
+    val inArray = new Array[Byte](total)
+    System.arraycopy(nlrArray, 0, inArray, 0, nlr2)
+    val pad = new Array[Byte](padl)
+    random.nextBytes(pad)
+    System.arraycopy(pad, 0, inArray, nlr2, padl)
 
-      Some(out)
-    } catch {
-      case e: Exception =>
-        println(s"Failed: ${e.printStackTrace()}")
-        None
+
+    val out = new Array[ArrayIndex[Byte]](dim)
+    for (i <- 0 until dim) {
+      out(i) = new ArrayIndex[Byte](new Array[Byte](ftotal), 0)
     }
+
+    out
+
+//    splitter(out, new ArrayIndex[Byte](inArray, 0))
+//
+//    for (i <- 0 until dim) {
+//      addables(i).addAndSignal(new M2GSemiRawRecord(key, out(i).array))
+//    }
+//
+//    new M2GSemiRawRecord(key, out(i).array)
   }
 
   //Formerly Mixer
   def assemble(in: Array[ArrayIndex[Byte]]): Array[Byte] = {
-//    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(112), 0, 112)
-//    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(24 * 2), 0, 24 * 2)
-
     //TODO still considers only two dimensions
-    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(in(0).length * 2), 0, in(0).length * 2)
+    val out: ArrayIndex[Byte] = new ArrayIndex[Byte](new Array(in(0).length * dim), 0, in(0).length * dim)
 
     dynamicMatrixMixer.apply(out, in)
 
@@ -211,61 +235,33 @@ object Main {
     out
   }
 
-  //TODO I think m2g-data-viewer
-  // is doing some extra step before it can be
-  // deserialised, this is this function
-  def mysteryFunction(
-      in: Array[Byte], /*, preMixedArray: Array[ArrayIndex[Byte]]*/
-  ): Array[Byte] = {
-//    val ftotal = preMixedArray(0).length
+//  def newDissasemle(in: ArrayIndex[Byte]): Array[ArrayIndex[Byte]] = {
+//    val value = in
+//
+//    val n = value.length
+//    val nlr0 = n + LR
+//
+//    val nlr1 = M2GFradingProcessor.alignedLength(nlr0)
+//    val nlr2 = t.length(nlr1)
+//
+//    val extraLength = nlr1 - nlr0
+//    val nlr = if(extraLength > 0) t.length(nlr0) else nlr2
+//    val ftotal = ((nlr / d) + (if (r > 0) 1 else 0)) << LOG_LONG_BYTES
+//  }
 
-//    val ftotal = 56 //this is just what I found when running m2g-data-viewer, this might be inconsitent
-//    val ftotal = 24//this is just what I found when running m2g-data-viewer, this might be inconsitent
-
-//    println("in length: " + ((in.length / 2) - (32)))
-//    val ftotal = in.length//this is just what I found when running m2g-data-viewer, this might be inconsitent
-
-    val ftotal = (in.length / 2) - 32
-
-//    val ftotal = mixLen //From split array len
-
-
-    val total = dim * ftotal
-
-    //LR = INT_BYTES so INT_BYTES - INT_BYTES = 0
-    val r = Bits.getIntUnsafe(in, 0)
-//    val n = t.length(total - INT_BYTES + (if(r > 0) r - d else 0))
-
-//    val n = 64 //this is just what I found when running m2g-data-viewer, this might be inconsitent
-//    val n = 24 //this is just what I found when running m2g-data-viewer, this might be inconsitent
-//    val n = in.length //this is just what I found when running m2g-data-viewer, this might be inconsitent
-//    val n = (in.length / 2) - 32 //this is just what I found when running m2g-data-viewer, this might be inconsitent
-
-    val n = in.length - 4// TODO this value is wrong all the time
-    // Minus 8 because int_bytes is 8
-
-    val value = new Array[Byte](n)
-    System.arraycopy(in, INT_BYTES, value, 0, n)
-
-    value
-  }
-
-  def newMysteryFunction(in: Array[Byte], lenOfSplitArr: Int): Array[Byte] = {
-    val ftotal = lenOfSplitArr
-    val total = dim * ftotal
-
-    val r = Bits.getIntUnsafe(in, LR - INT_BYTES)
-
-    val n = decryptAndUnshiftClass.length(total - LR + (if(r > 0) r - d else 0))
-
-    val value = new Array[Byte](n)
-    System.arraycopy(in, LR, value, 0, n)
-
-    value
-  }
-
-
-  def fixLength(in: Array[Byte]): Array[Byte] =
-    in.reverse.dropWhile(_ == 0).reverse
+  //TODO no longer needed, part of the decrpyt now
+//  def newMysteryFunction(in: Array[Byte], lenOfSplitArr: Int): Array[Byte] = {
+//    val ftotal = lenOfSplitArr
+//    val total = dim * ftotal
+//
+//    val r = Bits.getIntUnsafe(in, LR - INT_BYTES)
+//
+//    val n = decryptAndUnshiftClass.length(total - LR + (if(r > 0) r - d else 0))
+//
+//    val value = new Array[Byte](n)
+//    System.arraycopy(in, LR, value, 0, n)
+//
+//    value
+//  }
 
 }

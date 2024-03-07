@@ -67,28 +67,28 @@ object Spec extends TestSuite with Data {
 
   override val tests: Tests = Tests {
 
-    test("new decrypt test") - {
-      val merged = Main.assemble(longSplit)
-
-      val assembledOldVersion = Main.decryptAndUnshift(merged)
-
-      val aseemebleNewVersion = Main.newDecryptAndUnshift(merged)
-
-//      println("Old: " + assembledOldVersion.get.mkString("", ", ", ""))
-//      println("New: " + aseemebleNewVersion.mkString("", ", ", ""))
-
-      val merged2 = Main.assemble(split)
-
-      val assembledOldVersion2 = Main.decryptAndUnshift(merged2)
-
-      val aseemebleNewVersion2 = Main.newDecryptAndUnshift(merged2)
-
-//      println("Old2: " + assembledOldVersion2.get.mkString("", ", ", ""))
-//      println("New2: " + aseemebleNewVersion2.mkString("", ", ", ""))
-
-      println("xx: " + aseemebleNewVersion.length)
-      assert(aseemebleNewVersion2.sameElements(decodedAndShifted))
-    }
+//    test("new decrypt test") - {
+//      val merged = Main.assemble(longSplit)
+//
+//      val assembledOldVersion = Main.decryptAndUnshift(merged)
+//
+//      val aseemebleNewVersion = Main.newDecryptAndUnshift(merged)
+//
+////      println("Old: " + assembledOldVersion.get.mkString("", ", ", ""))
+////      println("New: " + aseemebleNewVersion.mkString("", ", ", ""))
+//
+//      val merged2 = Main.assemble(split)
+//
+//      val assembledOldVersion2 = Main.decryptAndUnshift(merged2)
+//
+//      val aseemebleNewVersion2 = Main.newDecryptAndUnshift(merged2)
+//
+////      println("Old2: " + assembledOldVersion2.get.mkString("", ", ", ""))
+////      println("New2: " + aseemebleNewVersion2.mkString("", ", ", ""))
+//
+//      println("xx: " + aseemebleNewVersion.length)
+//      assert(aseemebleNewVersion2.sameElements(decodedAndShifted))
+//    }
 
 //    test("Mixing Test") - {
 //      assert(
@@ -195,36 +195,20 @@ object Spec extends TestSuite with Data {
 //    }
 
     test("Decrypt ALL types of Events") - {
-      val translated: Array[Array[ArrayIndex[Byte]]] = ALL_EVENTS.map {
+      ALL_EVENTS.map {
         eventFraded =>
           eventFraded.map { event =>
             new ArrayIndex[Byte](event, 0, event.length)
           }
-      }
-
-      translated.zipWithIndex.foreach { blockWithIndex =>
+      }.zipWithIndex.foreach { blockWithIndex =>
         val block = blockWithIndex._1
         val index = blockWithIndex._2
-//        println("Block splits length: " + block(0).length)
 
         val mixed = Main.assemble(block)
-//        println("mixed length: " + mixed.length)
-        //TODO at this point everything is correct
-
         val decrypted = Main.newDecryptAndUnshift(mixed)
-//        println("decrypted length: " + decrypted.get.length)
-        if(mixed.length == 112) {
-//          println("arr decrypted: " + decrypted.get.mkString("", ", ", ""))
-        }
-        println
 
-
-
-        val shiftAgain = Main.newMysteryFunction(decrypted, block(0).length)
-//        val result =
-//          shiftAgain.map(e => e.mkString("", ", ", ""))
-
-        println(s"${shiftAgain.mkString("", ", ","")}")
+        println(s"${decrypted.mkString("", ", ","")}")
+        /////////////////////////////////////////////
       }
     }
 

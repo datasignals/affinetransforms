@@ -7,6 +7,7 @@ import org.bouncycastle.crypto.params.KeyParameter
 
 import java.lang.Long.{BYTES => LONG_BYTES}
 import java.util.Random
+import java.util.concurrent.{Callable, Future}
 
 object EncryptAndShift {
 
@@ -69,4 +70,63 @@ class EncryptAndShift(private[this] val cipher: () => BlockCipher,
     }
     bytes
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  val BlocksPerThread: Int = 1 //TODO one seems to work
+
+  private[this] val blocksPerThread: Int = BlocksPerThread //TODO this is assumed based on a constructor default value using it
+
+  @inline private def nFutures(nBlocks: Int): Int = {
+    val k = nBlocks / blocksPerThread
+    val r = nBlocks % blocksPerThread
+    if(r > 0) k + 1 else k
+  }
+
+  def apply(data: Array[Byte]): Array[Byte] = {
+    val inBlockSize = this.inBlockSize
+    val outBlockSize = this.outBlockSize
+    val info = GenericBlockTransformation.blockInfo(data.length, inBlockSize, outBlockSize)
+    val nBlocks = info.numberOfBlocks
+    val out = new Array[Byte](info.outLength)
+    val fLength = nFutures(nBlocks)
+    val futures = new Array[Future[Unit]](fLength)
+    var outOffset = 0
+    var inOffset = 0
+    val inLength = blocksPerThread * inBlockSize
+    val outLength = blocksPerThread * outBlockSize
+
+    var i = 0
+    while (i < fLength) {
+      this.processBlock(out, outOffset, data, inOffset)
+      outOffset += outLength
+      inOffset += inLength
+      i += 1
+    }
+    i = 0
+    out
+  }
+
+  def length(inputLength: Int): Int =
+    GenericBlockTransformation.blockInfo(inputLength, this.inBlockSize, this.outBlockSize).outLength
 }

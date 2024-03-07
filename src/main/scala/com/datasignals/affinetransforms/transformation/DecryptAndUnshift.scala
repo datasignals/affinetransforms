@@ -62,38 +62,8 @@ class DecryptAndUnshift(private[this] val cipher: () => BlockCipher,
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  //TODO removed callable
-  private class BlockCallable(private[this] val out: Array[Byte],
-                              private[this] val outOffset: Int,
-                              private[this] val in: Array[Byte],
-                              private[this] val inOffset: Int,
-                              private[this] val length: Int)
-    /*extends Callable[Unit]*/ {
-//    override def call(): Unit = this.apply(out, outOffset, in, inOffset, length)
-  }
-
 //TODO taken from class GenericConcurrentThreadPoolEncoder
-
 //  val BlocksPerThread: Int = 1 << 16 //65536
-
 //TODO  This one is fed from somewhere else, possibly I need this one instead
 //  val BlocksPerThread: Int = 1 << 10
 
@@ -114,32 +84,19 @@ class DecryptAndUnshift(private[this] val cipher: () => BlockCipher,
     val nBlocks = info.numberOfBlocks
     val out = new Array[Byte](info.outLength)
     val fLength = nFutures(nBlocks)
-//    println("nBlocks: " + nBlocks)
-//    val futures = new Array[Future[Unit]](fLength)
 
     var outOffset = 0
     var inOffset = 0
     val inLength = blocksPerThread * inBlockSize
     val outLength = blocksPerThread * outBlockSize
     var i = 0
-//    println("inLength: " + inLength)
-//    println("outLength: " + outLength)
-//    println("outOffset: " + outOffset)
     while (i < fLength) {
-      //System.err.println(s"Out length: ${out.length}, out offset: $outOffset, data length: ${data.length}, in offset: $inOffset, inLength: $inLength")
-
-//      val a = new BlockCallable(out, outOffset, data, inOffset, inLength)
       this.processBlock(out, outOffset, data, inOffset, inLength)
-
       outOffset += outLength
       inOffset += inLength
       i += 1
     }
-    i = 0
-//    while (i < fLength) {
-//      futures(i).get()
-//      i += 1
-//    }
+
     out
   }
 
