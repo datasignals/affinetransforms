@@ -67,76 +67,23 @@ object Spec extends TestSuite with Data {
 
   override val tests: Tests = Tests {
 
-//    test("new decrypt test") - {
-//      val merged = Main.assemble(longSplit)
-//
-//      val assembledOldVersion = Main.decryptAndUnshift(merged)
-//
-//      val aseemebleNewVersion = Main.newDecryptAndUnshift(merged)
-//
-////      println("Old: " + assembledOldVersion.get.mkString("", ", ", ""))
-////      println("New: " + aseemebleNewVersion.mkString("", ", ", ""))
-//
-//      val merged2 = Main.assemble(split)
-//
-//      val assembledOldVersion2 = Main.decryptAndUnshift(merged2)
-//
-//      val aseemebleNewVersion2 = Main.newDecryptAndUnshift(merged2)
-//
-////      println("Old2: " + assembledOldVersion2.get.mkString("", ", ", ""))
-////      println("New2: " + aseemebleNewVersion2.mkString("", ", ", ""))
-//
-//      println("xx: " + aseemebleNewVersion.length)
-//      assert(aseemebleNewVersion2.sameElements(decodedAndShifted))
-//    }
+    test("Mixing Test") - {
+      assert(
+        Main
+          .assemble(split)
+          .sameElements(merged)
+      )
+    }
 
-//    test("Mixing Test") - {
-//      assert(
-//        Main
-//          .assemble(split)
-//          .sameElements(merged)
-//      )
-//    }
+    test("Decrypt and Unshift Test") - {
+      val a =
+        Main
+          .decryptAndUnshift(merged)
 
-//    test("Decrypt and Unshift Test") - {
-//      println(
-//        Main
-//          .fixLength(
-//            Main
-//              .decryptAndUnshift(merged)
-//              .get
-//          )
-//          .mkString("", ", ", "")
-//      )
-//
-//      println(decodedAndShifted.mkString("", ", ", ""))
-
-//      val a = Main.fixLength(
-//        Main
-//          .decryptAndUnshift(merged)
-//          .get
-//      )
-//
-//      assert(
-//        a.sameElements(decodedAndShifted)
-//      )
-//    }
-
-//    test("\"Magic\" Function") - {
-//
-//      println(
-//        Main.mysteryFunction(decodedAndShifted).mkString("", ", ", "")
-//      )
-//      println(
-//        afterMysteryFunction.mkString("", ", ", "")
-//      )
-//
-//      assert(
-//        Main
-//          .mysteryFunction(decodedAndShifted)
-//          .sameElements(afterMysteryFunction)
-//      )
-//    }
+      assert(
+        a.sameElements(afterMysteryFunction)
+      )
+    }
 
     //TODO splitting doesn't seem to work
 //    test("Splitting Test") - {
