@@ -15,12 +15,36 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 import java.lang.Integer.{BYTES => INT_BYTES}
 import scala.concurrent.Future
+import scala.io.Source
 import scala.util.control.NonFatal
 
 
 object Main {
 
-  def main(args: Array[String]) = {}
+  def main(args: Array[String]) = {
+    val path = args.head
+    val testTxtSource = Source.fromFile(path)
+    val str = testTxtSource.mkString
+    testTxtSource.close()
+
+    val results = str.split("\n").map{ line =>
+      val dataArray = line.split("\\|").map(_.trim) // Splitting by '|' and trimming whitespaces
+
+      val id = dataArray(0)
+      val frade1 = dataArray(1).split(",").map(e => e.toInt.toByte)
+      val frade2 = dataArray(2).split(",").map(e => e.toInt.toByte)
+
+      val fullFrade = Array(
+        new ArrayIndex[Byte](frade1, 0, frade1.length),
+        new ArrayIndex[Byte](frade2, 0, frade2.length),
+      )
+      val assembled = Main.assemble(fullFrade)
+      val decrypted = Main.decryptAndUnshift(assembled)
+
+      println(decrypted.mkString("", ", ", ""))
+      decrypted
+    }
+  }
 
   private[this] val LR = INT_BYTES
   /** *****************************************************************************************************************
@@ -134,9 +158,9 @@ object Main {
 
   def newEncryptAndShift(in: Array[Byte]): (Array[Byte], Int) = {
     //TODO I think this part works fine
-    val encryptedData = encryptAndShiftClass.apply(in)
+//    val encryptedData = encryptAndShiftClass.apply(in)
 
-    val value = encryptedData
+    val value = in
 
     val n = value.length
     val nlr0 = n + LR

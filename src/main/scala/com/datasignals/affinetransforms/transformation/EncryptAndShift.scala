@@ -91,9 +91,9 @@ class EncryptAndShift(private[this] val cipher: () => BlockCipher,
 
 
 
-
-
-  val BlocksPerThread: Int = 1 //TODO one seems to work
+//  val BlocksPerThread: Int = 1 << 16 //65536
+  val BlocksPerThread: Int = 1 << 10
+//  val BlocksPerThread: Int = 1 //TODO one seems to work
 
   private[this] val blocksPerThread: Int = BlocksPerThread //TODO this is assumed based on a constructor default value using it
 

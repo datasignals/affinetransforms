@@ -2,23 +2,17 @@ package com.datasignals.affinetransforms
 
 import com.datasignals.affinetransforms.entry.{ArrayIndex, Bits}
 import com.datasignals.affinetransforms.entry.Bits.LOG_LONG_BYTES
-import com.datasignals.affinetransforms.keystore.{
-  KeyInfo,
-  KeyStoreManager,
-  KeyStorePathInfo
-}
-import com.datasignals.affinetransforms.transformation.{
-  DecryptAndUnshift,
-  EncryptAndShift
-}
+import com.datasignals.affinetransforms.keystore.{KeyInfo, KeyStoreManager, KeyStorePathInfo}
+import com.datasignals.affinetransforms.transformation.{DecryptAndUnshift, EncryptAndShift}
 import org.bouncycastle.crypto.engines.AESEngine
 import org.bouncycastle.crypto.params.KeyParameter
 import utest._
 
+import java.io.{File, FileWriter}
 import java.nio.file.Paths
-import java.util.Random
-import scala.io.Source
-import scala.util.Try
+import java.util.{Random, Scanner}
+import scala.io.{BufferedSource, Source}
+import scala.util.{Failure, Success, Try}
 
 object Spec extends TestSuite with Data {
 
@@ -65,7 +59,108 @@ object Spec extends TestSuite with Data {
       shift
     ) //(shiftArray)
 
+
+  def testRealData(source: String, dest: String) = {
+    val fileWriter =
+      new FileWriter(dest, true)
+
+//    val file = new File(source)
+//    val reader = new Scanner(file)
+    val reader = Source.fromFile(source)
+
+    var iterator = 0
+//    while (reader.hasNextLine) {
+    for(line <- reader.getLines()) {
+//      val line = reader.nextLine()
+
+      processLine(line) match {
+        case Failure(exception) => println("error processing line: " + iterator + ". Reason: " + exception + " line: " + line)
+        case Success(value) => fileWriter.append(value.mkString("", ", ", "") + "\n")
+      }
+      println(iterator)
+      iterator = iterator + 1
+    }
+//    }
+
+    fileWriter.close()
+    reader.close()
+  }
+
+
+  def processLine(s: String): Try[Array[Byte]] = Try {
+    val dataArray = s
+      .split("\\|")
+      .map(_.trim) // Splitting by '|' and trimming whitespaces
+
+    val id = dataArray(0)
+    val frade1 = dataArray(1).trim.split(",").map(e => e.toInt.toByte)
+    val frade2 = dataArray(2).trim.split(",").map(e => e.toInt.toByte)
+//    println("frade1: " + frade1.mkString("", ", ", ""))
+//    println("frade2: " + frade2.mkString("", ", ", ""))
+//    println
+
+    val fullFrade = Array(
+      new ArrayIndex[Byte](frade1, 0, frade1.length),
+      new ArrayIndex[Byte](frade2, 0, frade2.length)
+    )
+    val assembled = Main.assemble(fullFrade)
+
+    Main.decryptAndUnshift(assembled)
+  }
+
+  def testRealData() = {
+    val fileWriter =
+      new FileWriter("/Users/og_pixel/Desktop/small.decrypted", true)
+    val path = "/Users/og_pixel/Desktop/small.frades"
+    val testTxtSource = Source.fromFile(path)
+//    val str = testTxtSource.mkString
+//    testTxtSource.close()
+    val lines = testTxtSource.getLines()
+//    val len = lines.length
+    println("lines: " + lines.length)
+
+    try {
+      for (i <- 0 to 10) {
+//        val z = Try {
+          val line = lines.next()
+
+          val dataArray = line
+            .split("\\|")
+            .map(_.trim) // Splitting by '|' and trimming whitespaces
+
+          val id = dataArray(0)
+          val frade1 = dataArray(1).split(",").map(e => e.toInt.toByte)
+          val frade2 = dataArray(2).split(",").map(e => e.toInt.toByte)
+
+          val fullFrade = Array(
+            new ArrayIndex[Byte](frade1, 0, frade1.length),
+            new ArrayIndex[Byte](frade2, 0, frade2.length)
+          )
+          val assembled = Main.assemble(fullFrade)
+          val decrypted = Main.decryptAndUnshift(assembled)
+
+          fileWriter.append(decrypted.mkString("", ", ", "") + "\n")
+//        }
+
+
+      }
+
+    } finally {
+      testTxtSource.close()
+    }
+  }
+
   override val tests: Tests = Tests {
+
+    test("real data") - {
+      testRealData("/Users/og_pixel/Desktop/1mill.frades", "/Users/og_pixel/Desktop/1mill.frades.decrypted")
+    }
+
+    test("test") - {
+      val assembled = Main.assemble(garyTestSplit)
+      val decrypted = Main.decryptAndUnshift(assembled)
+      println("Gary Arr: " + decrypted.mkString("", ", ", ""))
+    }
 
     test("Mixing Test") - {
       assert(
@@ -83,6 +178,25 @@ object Spec extends TestSuite with Data {
       assert(
         a.sameElements(afterMysteryFunction)
       )
+    }
+
+    test("Encrypt test") - {
+      val a = Main.newEncryptAndShift(afterMysteryFunction)
+      println(a._1.mkString("", ", ", ""))
+      println(a._1.length)
+      println()
+      println(merged.mkString("", ", ", ""))
+      println(merged.length)
+
+      val b = Main.disassemble(a._1, a._2)
+
+      val c = Main.assemble(b)
+
+      val d = Main.decryptAndUnshift(c)
+
+//      println(afterMysteryFunction.mkString("", ", ", ""))
+//      println()
+//      println(d.mkString("", ", ", ""))
     }
 
     //TODO splitting doesn't seem to work
@@ -141,14 +255,13 @@ object Spec extends TestSuite with Data {
 ////      assert(mysteryValue.sameElements(afterMysteryFunction))
 //    }
 
-
-    test("Encrypt and Split") - {
-      val (a, b) = Main.newEncryptAndShift(SplitData.mergedAndDecrypted)
-
-      val z = Main.disassemble(a, b)
-
-      z.foreach(e => println(e.array.mkString("", ", ", "")))
-    }
+//    test("Encrypt and Split") - {
+//      val (a, b) = Main.newEncryptAndShift(SplitData.mergedAndDecrypted)
+//
+//      val z = Main.disassemble(a, b)
+//
+//      z.foreach(e => println(e.array.mkString("", ", ", "")))
+//    }
 
 //    test("Decrypt ALL types of Events") - {
 //      ALL_EVENTS.map {
