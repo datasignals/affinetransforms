@@ -16,9 +16,10 @@ import scala.util.{Failure, Success, Try}
 
 object Spec extends TestSuite with Data {
 
+  private[this] val HOME_PATH = System.getProperty("user.home")
   private[this] val dim = 2
   private[this] val keyStorePath =
-    Paths.get("/Users/og_pixel/.m2g-data-viewer/keystore")
+    Paths.get(HOME_PATH, ".m2g", "keystore")
   private[this] val keyStoreManager = new KeyStoreManager(
     KeyStorePathInfo(keyStorePath, "m2g".toCharArray)
   )
@@ -108,53 +109,13 @@ object Spec extends TestSuite with Data {
     Main.decryptAndUnshift(assembled)
   }
 
-  def testRealData() = {
-    val fileWriter =
-      new FileWriter("/Users/og_pixel/Desktop/small.decrypted", true)
-    val path = "/Users/og_pixel/Desktop/small.frades"
-    val testTxtSource = Source.fromFile(path)
-//    val str = testTxtSource.mkString
-//    testTxtSource.close()
-    val lines = testTxtSource.getLines()
-//    val len = lines.length
-    println("lines: " + lines.length)
-
-    try {
-      for (i <- 0 to 10) {
-//        val z = Try {
-          val line = lines.next()
-
-          val dataArray = line
-            .split("\\|")
-            .map(_.trim) // Splitting by '|' and trimming whitespaces
-
-          val id = dataArray(0)
-          val frade1 = dataArray(1).split(",").map(e => e.toInt.toByte)
-          val frade2 = dataArray(2).split(",").map(e => e.toInt.toByte)
-
-          val fullFrade = Array(
-            new ArrayIndex[Byte](frade1, 0, frade1.length),
-            new ArrayIndex[Byte](frade2, 0, frade2.length)
-          )
-          val assembled = Main.assemble(fullFrade)
-          val decrypted = Main.decryptAndUnshift(assembled)
-
-          fileWriter.append(decrypted.mkString("", ", ", "") + "\n")
-//        }
-
-
-      }
-
-    } finally {
-      testTxtSource.close()
-    }
-  }
 
   override val tests: Tests = Tests {
 
-    test("real data") - {
-      testRealData("/Users/og_pixel/Desktop/1mill.frades", "/Users/og_pixel/Desktop/1mill.frades.decrypted")
-    }
+    //TODO if you want to use this tests, change path locations
+//    test("real data") - {
+//      testRealData("/Users/og_pixel/Desktop/1mill.frades", "/Users/og_pixel/Desktop/1mill.frades.decrypted")
+//    }
 
     test("test") - {
       val assembled = Main.assemble(garyTestSplit)

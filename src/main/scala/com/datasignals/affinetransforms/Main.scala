@@ -21,6 +21,8 @@ import scala.util.control.NonFatal
 
 object Main {
 
+//  private[this] val KEYSTORE_LOCATION = Paths.get(HOME_PATH, ".m2g", "keystore").toString
+
   def main(args: Array[String]) = {
     val path = args.head
     val testTxtSource = Source.fromFile(path)
@@ -46,12 +48,13 @@ object Main {
     }
   }
 
+  private[this] val HOME_PATH = System.getProperty("user.home")
   private[this] val LR = INT_BYTES
   /** *****************************************************************************************************************
     */
   private[this] val dim = 2
   private[this] val keyStorePath =
-    Paths.get("/Users/og_pixel/.m2g-data-viewer/keystore")
+    Paths.get(HOME_PATH, ".m2g", "keystore")
   private[this] val keyStoreManager = new KeyStoreManager(
     KeyStorePathInfo(keyStorePath, "m2g".toCharArray)
   )
